@@ -1,5 +1,25 @@
 <?php
 
+/*
+
+FacebookUtils
+@author Jonas
+@version 0.1
+
+Some utilities for use with the Facebook PHP SDK :
+https://developers.facebook.com/docs/reference/php/
+
+Web demo : 
+http://positronic.fr/apps/facebook/facebook-utils/
+
+App demo : 
+http://apps.facebook.com/facebook-utils
+
+Tab demo : 
+https://www.facebook.com/positronic.fr/app_473357126030652
+
+*/
+
 class FacebookUtils
 {
     var $facebook;
@@ -122,6 +142,10 @@ class FacebookAppType {
 	const WEB = 'Website';
 	const TAB = 'PageTab';
 	const APP = 'Canevas';
+}
+
+class FacebookPerms {
+	const PUBLISH_STREAM = '';
 }
 
 ?>

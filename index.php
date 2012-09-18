@@ -1,9 +1,29 @@
 ﻿<?php
 
-require 'src/facebook.php'; 
+/*
+
+FacebookUtils
+@author Jonas
+@version 0.1
+
+Some utilities for use with the Facebook PHP SDK :
+https://developers.facebook.com/docs/reference/php/
+
+Web demo : 
+http://positronic.fr/apps/facebook/facebook-utils/
+
+App demo : 
+http://apps.facebook.com/facebook-utils
+
+Tab demo : 
+https://www.facebook.com/positronic.fr/app_473357126030652
+
+*/
+
+require 'src/facebook.php'; // PHP SDK
 require 'src/facebook_utils.php';
 
-// Init Facebook PHP SDK (https://developers.facebook.com/docs/reference/php/)
+// Init Facebook PHP SDK
 $facebook = new Facebook(array(
   'appId'  => '473357126030652',
   'secret' => '###############'
@@ -17,7 +37,7 @@ $utils->setScope(array(
 	'publish_stream'
 ));
 
-// 
+// Define redirect URI for each app type we need
 $utils->setAppURI(array(
 	FacebookAppType::APP => 'https://apps.facebook.com/facebook-utils',
 	FacebookAppType::TAB => 'http://www.facebook.com/positronic.fr?sk=app_473357126030652',
