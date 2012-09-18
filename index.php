@@ -1,18 +1,23 @@
 ﻿<?php
 
-require 'src/facebook.php';
+require 'src/facebook.php'; 
 require 'src/facebook_utils.php';
 
-// Create our Application instance (replace this with your appId and secret).
+// Init Facebook PHP SDK (https://developers.facebook.com/docs/reference/php/)
 $facebook = new Facebook(array(
   'appId'  => '473357126030652',
-  'secret' => '################'
+  'secret' => '###############'
 ));
 
+// Init FacebookUtils
 $utils = new FacebookUtils($facebook);
+
+// Ask for publish_stream permission
 $utils->setScope(array(
 	'publish_stream'
 ));
+
+// 
 $utils->setAppURI(array(
 	FacebookAppType::APP => 'https://apps.facebook.com/facebook-utils',
 	FacebookAppType::TAB => 'http://www.facebook.com/positronic.fr?sk=app_473357126030652',
@@ -39,9 +44,9 @@ $utils->setAppURI(array(
   </head>
   <body>
     <h1>FacebookUtils</h1>
-	Web demo : <a href="http://positronic.fr/apps/facebook/facebook-utils/">http://positronic.fr/apps/facebook/facebook-utils/</a><br/>
-	App demo : <a href="http://apps.facebook.com/facebook-utils">http://apps.facebook.com/facebook-utils</a><br/>
-	Tab demo : <a href="https://www.facebook.com/positronic.fr/app_473357126030652">https://www.facebook.com/positronic.fr/app_473357126030652</a><br/>
+	Web demo : <a href="http://positronic.fr/apps/facebook/facebook-utils/" target="_blank">http://positronic.fr/apps/facebook/facebook-utils/</a><br/>
+	App demo : <a href="http://apps.facebook.com/facebook-utils" target="_blank">http://apps.facebook.com/facebook-utils</a><br/>
+	Tab demo : <a href="https://www.facebook.com/positronic.fr/app_473357126030652" target="_blank">https://www.facebook.com/positronic.fr/app_473357126030652</a><br/>
 	<?php
 		/*
 		echo '<h3>Les paramètres reçus</h3><pre>';
