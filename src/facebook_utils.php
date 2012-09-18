@@ -109,12 +109,12 @@ class FacebookUtils
         }
     }
 	
-	public function isWebApp(){
-		return getAppType() == FacebookAppType::WEB;
+	public function isWebsite(){
+		return $this->getAppType() == FacebookAppType::WEB;
 	}
 	
-	public function isTabApp(){
-		return getAppType() == FacebookAppType::TAB;
+	public function isPageTab(){
+		return $this->getAppType() == FacebookAppType::TAB;
 	}
 }
 

@@ -6,7 +6,7 @@ require 'src/facebook_utils.php';
 // Create our Application instance (replace this with your appId and secret).
 $facebook = new Facebook(array(
   'appId'  => '473357126030652',
-  'secret' => '################################'
+  'secret' => '################'
 ));
 
 $utils = new FacebookUtils($facebook);
@@ -50,6 +50,9 @@ $utils->setAppURI(array(
 		*/
 		echo '<h3>App type</h3><pre>';
 		echo $utils->getAppType();
+		if($utils->isPageTab()){
+			echo ' (liked = '.($utils->isPageLiked() ? 'true' : 'false').')';
+		}
 		echo '</pre>';
 		
 		echo '<h3>Is Auth ?</h3><pre>';
