@@ -44,8 +44,6 @@ class FacebookUtils
           }
         }
 		
-		print_r($_REQUEST);
-		
 		if(isset($_REQUEST['error'])){
 			$this->error = new FacebookError();
 			$this->error->error = $_REQUEST['error'];
