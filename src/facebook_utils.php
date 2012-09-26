@@ -6,8 +6,8 @@
 * https://github.com/jonasmonnier/FacebookUtils
 *
 * @author Jonas
-* @version 0.1.1
-* @date 2012-09-19
+* @version 0.1.2
+* @date 2012-09-26
 * 
 */
 
@@ -126,6 +126,18 @@ class FacebookUtils
 			return $this->signed_data['page']['liked'] == 1;
 		return null;
     }
+	
+	public function hasAppData(){
+		if($this->hasSignedData())
+			return isset($this->signed_data['app_data']);
+		return null;
+	}
+	
+	public function getAppData(){
+		if($this->hasSignedData())
+			$this->signed_data['app_data'];
+		return null;
+	}
 	
 	public function isPageAmin(){
 		if($this->hasSignedData())
