@@ -6,7 +6,7 @@
 * https://github.com/jonasmonnier/FacebookUtils
 *
 * @author Jonas
-* @version 0.1.2
+* @version 0.1.3
 * @date 2012-09-27
 * 
 */
@@ -159,13 +159,14 @@ class FacebookUtils
 		return null;
     }
 	
-	 public function getAppType(){
-        if(!isset($_REQUEST['signed_request'])){
-            return FacebookAppType::WEBSITE;
-        }else if(isset($this->signed_data['page'])){
+	// potentialy bugged with signed_data stored in session
+	public function getAppType(){
+        if(isset($this->signed_data['page'])){
             return FacebookAppType::PAGE_TAB;
-        }else{
+        }else if(isset($this->signed_data['user'])){
             return FacebookAppType::CANEVAS;
+        }else{
+            return FacebookAppType::WEBSITE;
         }
     }
 	

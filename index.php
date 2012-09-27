@@ -6,8 +6,8 @@
 * https://github.com/jonasmonnier/FacebookUtils
 *
 * @author Jonas
-* @version 0.1.1
-* @date 2012-09-19
+* @version 0.1.3
+* @date 2012-09-27
 * 
 */
 
@@ -39,7 +39,7 @@ $utils->setAppURI(array(
 <!doctype html>
 <html xmlns:fb="http://www.facebook.com/2008/fbml">
   <head>
-    <title>php-sdk</title>
+    <title>FBUtils</title>
     <style>
       body {
         font-family: 'Lucida Grande', Verdana, Arial, sans-serif;
@@ -65,7 +65,7 @@ $utils->setAppURI(array(
     </style>
   </head>
   <body>
-    <h1>FacebookUtils</h1>
+    <h1>FacebookUtils <?php if(isset($_REQUEST['page'])) echo ' > page' ?> </h1>
 <?php
 		/*
 		echo '<h2>Request</h2><pre>';
