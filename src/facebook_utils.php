@@ -7,7 +7,7 @@
 *
 * @author Jonas
 * @version 0.1.2
-* @date 2012-09-26
+* @date 2012-09-27
 * 
 */
 
@@ -16,6 +16,7 @@ class FacebookUtils
     var $facebook;
     var $scope;
     var $signed_data;
+    var $signed_data_is_from_session;
     var $user;
     var $user_data;
     var $user_permissions;
@@ -24,8 +25,17 @@ class FacebookUtils
     
     public function __construct($facebook){
         $this->facebook = $facebook;
-        $this->signed_data = $facebook->getSignedRequest();
-        $this->user = $facebook->getUser();
+		
+		$this->signed_data = $facebook->getSignedRequest();
+		if($this->signed_data != null)
+			$_SESSION['fb_signed_data'] = $this->signed_data;
+		else if(isset($_SESSION['fb_signed_data'])){
+			$this->signed_data = $_SESSION['fb_signed_data'];
+			if($this->signed_data != null)
+				$this->signed_data_is_from_session = true;
+		}
+		
+        $this->user = $facebook->getUser(); 
         
         // We may or may not have this data based on whether the user is logged in.
         // If we have a $user id here, it means we know the user is logged into
@@ -116,6 +126,10 @@ class FacebookUtils
     public function hasSignedData(){
         return $this->signed_data != null;
     }
+	
+	public function isSignedDataFromSession(){
+		return $this->signed_data_is_from_session;
+	}
 
     public function getSignedData(){
         return $this->signed_data;

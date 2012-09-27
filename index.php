@@ -116,7 +116,7 @@ $utils->setAppURI(array(
 		echo '</pre>';
 		
 		// Show signed request
-		echo '<h2>Signed request</h2><pre>';
+		echo '<h2>Signed request (from session = '.($utils->isSignedDataFromSession() ? 'true' : 'false') .')</h2><pre>';
 		print_r($utils->getSignedData());
 		echo '</pre>';
 		
@@ -136,5 +136,6 @@ $utils->setAppURI(array(
 			echo 'Needs auth';
 		echo '</pre>';
 	?>
+		<br/><a href="index.php?page=2">Next page</a><br/><br/>
   </body>
 </html>
