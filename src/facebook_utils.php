@@ -13,21 +13,22 @@
 
 class FacebookUtils
 {
-    var $facebook;
-    var $scope;
-    var $signed_data;
-    var $signed_data_source;
-    var $user;
-	var $user_source;
-    var $user_data;
-    var $user_permissions;
-	var $app_uri;
-	var $error;
+    /*private*/ var $facebook;
+    /*private*/ var $scope;
+    /*private*/ var $signed_data;
+    /*private*/ var $signed_data_source;
+    /*private*/ var $user;
+    /*private*/ var $user_source;
+    /*private*/ var $user_data;
+    /*private*/ var $user_permissions;
+    /*private*/ var $app_uri;
+    /*private*/ var $error;
 	
     
-    public function __construct($facebook, $use_session = true){
-        $this->facebook = $facebook;
-    }
+	public function __construct($facebook, $use_session = true){
+		$this->facebook = $facebook;
+	}
+	
 	
 	public function initSignedData(/*$use_session = true*/)
 	{
@@ -68,10 +69,9 @@ class FacebookUtils
 				
 			  } 
 			  catch (FacebookApiException $e) {
-				$_SESSION['fb']['user'] = null;
-				$this->user = null;
-				$this->user_data = null;
-				$this->user_permissions = null;
+				$this->user = $_SESSION['fb']['user'] = null;
+				$this->user_data = $_SESSION['fb']['user_data'] = null;
+				$this->user_permissions = $_SESSION['fb']['user_permissions'] = null;
 			  }
 			}
 			
