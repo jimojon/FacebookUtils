@@ -6,8 +6,8 @@
 * https://github.com/jonasmonnier/FacebookUtils
 *
 * @author Jonas
-* @version 0.1.3
-* @date 2012-09-27
+* @version 0.1.4
+* @date 2012-10-08
 * 
 */
 
@@ -16,53 +16,73 @@ class FacebookUtils
     var $facebook;
     var $scope;
     var $signed_data;
-    var $signed_data_is_from_session;
+    var $signed_data_source;
     var $user;
+	var $user_source;
     var $user_data;
     var $user_permissions;
 	var $app_uri;
 	var $error;
+	
     
-    public function __construct($facebook){
+    public function __construct($facebook, $use_session = true){
         $this->facebook = $facebook;
-		
-		$this->signed_data = $facebook->getSignedRequest();
-		if($this->signed_data != null)
-			$_SESSION['fb_signed_data'] = $this->signed_data;
-		else if(isset($_SESSION['fb_signed_data'])){
-			$this->signed_data = $_SESSION['fb_signed_data'];
-			if($this->signed_data != null)
-				$this->signed_data_is_from_session = true;
-		}
-		
-        $this->user = $facebook->getUser(); 
-        
-        // We may or may not have this data based on whether the user is logged in.
-        // If we have a $user id here, it means we know the user is logged into
-        // Facebook, but we don't know if the access token is valid. An access
-        // token is invalid if the user logged out of Facebook.
-        if ($this->user) {
-          try {
-            // Proceed knowing you have a logged in user who's authenticated.
-			$this->user_data = $this->getUserData();
-            $this->user_permissions = $this->getUserPermissions();
-          } 
-		  catch (FacebookApiException $e) {
-            $this->user = null;
-            $this->user_data = null;
-            $this->user_permissions = null;
-          }
-        }
-		
-		if(isset($_REQUEST['error'])){
-			$this->error = new FacebookError();
-			$this->error->error = $_REQUEST['error'];
-			if(isset($_REQUEST['error_reason']))
-				$this->error->error_reason = $_REQUEST['error_reason'];
-			if(isset($_REQUEST['error_description']))
-				$this->error->error_description = $_REQUEST['error_description'];
-		}
     }
+	
+	public function initSignedData(/*$use_session = true*/)
+	{
+		$this->signed_data = $this->facebook->getSignedRequest();
+		
+		// Si on a une signed data fournie par le PHP SDK
+		if($this->signed_data != null){
+			$_SESSION['fb']['signed_data'] = $this->signed_data;
+			$this->signed_data_source = 'SDK';
+		}
+			
+		// Sinon si on en a pas en POST mais qu'on l'a en SESSION
+		else if(isset($_SESSION['fb']['signed_data'])){
+			$this->signed_data = $_SESSION['fb']['signed_data'];
+			if($this->signed_data != null)
+				$this->signed_data_source = 'SESSION';
+		}
+	}
+	
+	public function initUser($use_session = true)
+	{
+		// Init user using API
+		if(!$use_session || !isset($_SESSION['fb']['user'])){
+			$this->user = $this->facebook->getUser(); 
+			$this->user_source = 'API';
+			
+			// We may or may not have this data based on whether the user is logged in.
+			// If we have a $user id here, it means we know the user is logged into
+			// Facebook, but we don't know if the access token is valid. An access
+			// token is invalid if the user logged out of Facebook.
+			if ($this->user) 
+			{
+			  try {
+				// Proceed knowing you have a logged in user who's authenticated.
+				$this->user_data = $this->getUserData();
+				$this->user_permissions = $this->getUserPermissions();
+				$_SESSION['fb']['user'] = $this->user;
+				
+			  } 
+			  catch (FacebookApiException $e) {
+				$_SESSION['fb']['user'] = null;
+				$this->user = null;
+				$this->user_data = null;
+				$this->user_permissions = null;
+			  }
+			}
+			
+		// Init user using session
+		}else{
+			$this->user_source = 'SESSION';
+			$this->user = $_SESSION['fb']['user'];
+			$this->user_data = $_SESSION['fb']['user_data'];
+			$this->user_permissions = $_SESSION['fb']['user_permissions'];
+		}
+	}
 
 	public function setScope($scope){
         $this->scope = $scope;
@@ -96,10 +116,17 @@ class FacebookUtils
     }
 	
 	public function hasError(){
-		return $this->error != null;
+		return $this->getError() != null;
 	}
 	
 	public function getError(){
+		if($this->error == null && isset($_REQUEST['error'])){
+			$this->error = new FacebookError($_REQUEST['error']);
+			if(isset($_REQUEST['error_reason']))
+				$this->error->error_reason = $_REQUEST['error_reason'];
+			if(isset($_REQUEST['error_description']))
+				$this->error->error_description = $_REQUEST['error_description'];
+		}
 		return $this->error;
 	}
     
@@ -110,16 +137,28 @@ class FacebookUtils
             return isset($this->user_permissions['data'][0][$name]) && $this->user_permissions['data'][0][$name] == '1';
         }
     }
+	
+	public function getUserID(){
+		return $this->user;
+	}
+	
+	public function getUserDataSource(){
+		return $this->user_source;
+	}
     
     public function getUserPermissions($update = false){
-        if($this->isAuth() && ($this->user_permissions == null || $update))
+        if($this->isAuth() && ($this->user_permissions == null || $update)){
             $this->user_permissions = $this->facebook->api('/me/permissions');
+			$_SESSION['fb']['user_permissions'] = $this->user_permissions; 
+		}
         return $this->user_permissions; 
     }
     
     public function getUserData($update = false){
-        if($this->isAuth() && ($this->user_data == null || $update))
+        if($this->isAuth() && ($this->user_data == null || $update)){
             $this->user_data = $this->facebook->api('/me/');
+			$_SESSION['fb']['user_data'] = $this->user_data;
+		}
         return $this->user_data;
     }
     
@@ -127,8 +166,8 @@ class FacebookUtils
         return $this->signed_data != null;
     }
 	
-	public function isSignedDataFromSession(){
-		return $this->signed_data_is_from_session;
+	public function getSignedDataSource(){
+		return $this->signed_data_source;
 	}
 
     public function getSignedData(){
@@ -192,6 +231,10 @@ class FacebookError
 	var $error;
 	var $error_reason;
 	var $error_description;
+	
+	public function __construct($error = ''){
+		$this->error = $error;
+	}
 	
 	public function getError(){
 		return $this->error;
@@ -302,6 +345,14 @@ class FacebookPerms
 	
 	//Page permissions
 	const manage_pages = 'manage_pages';
+}
+
+class Browser {
+
+	public static function isSafari(){
+		$u = $_SERVER['HTTP_USER_AGENT'];
+		return preg_match('/Safari/', $u) && !preg_match('/Chrome/', $u);
+	}
 }
 
 ?>

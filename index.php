@@ -20,8 +20,22 @@ $facebook = new Facebook(array(
   'secret' => '#########################################'
 ));
 
+
+
 // Init FacebookUtils
-$utils = new FacebookUtils($facebook);
+$utils = new FacebookUtils($facebook, $use_session);
+$utils->initSignedData();
+
+
+// Si use_session = true, la lib va chercher user, user_data et user_permission en session sans faire aucun appel à l'API facebook
+// Si les données ne sont pas présente en session, la lib va utiliser l'API et enregister les données en session.
+
+$use_session = true;
+if(isset($_REQUEST['use_session']) && $_REQUEST['use_session'] == 0)
+	$use_session = false;
+
+$utils->initUser($use_session);
+
 
 // Ask for publish_stream permission
 $utils->setScope(array(
@@ -30,9 +44,9 @@ $utils->setScope(array(
 
 // Define redirect URI for each app type we need
 $utils->setAppURI(array(
-	FacebookAppType::CANEVAS => 'https://apps.facebook.com/facebook-utils',
-	FacebookAppType::PAGE_TAB => 'http://www.facebook.com/positronic.fr?sk=app_473357126030652',
-	FacebookAppType::WEBSITE => 'http://positronic.fr/apps/facebook/facebook-utils/'
+	FacebookAppType::CANEVAS => 'https://facebook.digitaltank.fr/labs/facebook-utils/',
+	FacebookAppType::PAGE_TAB => 'https://facebook.digitaltank.fr/labs/facebook-utils/',
+	FacebookAppType::WEBSITE => 'https://facebook.digitaltank.fr/labs/facebook-utils/'
 ));
 ?>
 
@@ -67,12 +81,6 @@ $utils->setAppURI(array(
   <body>
     <h1>FacebookUtils <?php if(isset($_REQUEST['page'])) echo ' > page' ?> </h1>
 <?php
-		/*
-		echo '<h2>Request</h2><pre>';
-		print_r($_REQUEST);
-		echo '</pre>';
-		*/
-		
 		// Demos
 		echo '<h2>Demos</h2><pre>';
 		$apps = $utils->getAppURI();
@@ -115,13 +123,18 @@ $utils->setAppURI(array(
 			echo 'No<br/><a href="'.$utils->getLoginURL().'" target="_parent">Change</a><br/>';
 		echo '</pre>';
 		
+		// Show request
+		echo '<h2>Request</h2><pre>';
+		print_r($_REQUEST);
+		echo '</pre>';
+		
 		// Show signed request
-		echo '<h2>Signed request (from session = '.($utils->isSignedDataFromSession() ? 'true' : 'false') .')</h2><pre>';
+		echo '<h2>Signed request (source = '.$utils->getSignedDataSource().')</h2><pre>';
 		print_r($utils->getSignedData());
 		echo '</pre>';
 		
 		// Show user data
-		echo '<h2>User data</h2><pre>';
+		echo '<h2>User data (source = '.$utils->getUserDataSource().')</h2><pre>';
 		if($utils->isAuth())
 			print_r($utils->getUserData());
 		else
@@ -135,6 +148,19 @@ $utils->setAppURI(array(
 		else
 			echo 'Needs auth';
 		echo '</pre>';
+		
+		
+		
+		echo '<h2>Browser</h2><pre>';
+		echo $_SERVER['HTTP_USER_AGENT'] . "\n\n";
+		echo 'Safari : '.(Browser::isSafari() ? 'true' : 'false'); 
+		try {
+			$browser = get_browser(null, true);
+			print_r($browser);
+		}catch(Exception $e){
+			//echo $e->getMessage();
+		}
+		echo '</pre>'; 
 	?>
 		<br/><a href="index.php?page=2">Next page</a><br/><br/>
   </body>
