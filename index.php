@@ -17,7 +17,7 @@ require 'src/facebook_utils.php';
 // Init Facebook PHP SDK
 $facebook = new Facebook(array(
   'appId'  => '473357126030652',
-  'secret' => '24033b93f64921da1f13c5e11f2b9baa' 
+  'secret' => '#########################################' 
 ));
 
 // Init FacebookUtils
