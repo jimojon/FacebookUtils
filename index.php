@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 
 /**
 * FacebookUtils test
@@ -6,32 +6,53 @@
 * https://github.com/jonasmonnier/FacebookUtils
 *
 * @author Jonas
-* @version 0.1.3
-* @date 2012-09-27
+* @version 0.1.6
+* @date 2013-01-03
 * 
 */
+
+
+error_reporting(E_ALL);
+ini_set("display_errors", 1);
 
 require 'src/facebook.php'; // PHP SDK
 require 'src/facebook_utils.php';
 
+// Debug
+Debug::$ACTIVE = false;
+
 // Init Facebook PHP SDK
 $facebook = new Facebook(array(
   'appId'  => '473357126030652',
-  'secret' => '#########################################' 
+  'secret' => '24033b93f64921da1f13c5e11f2b9baa' 
 ));
 
-// Init FacebookUtils
-$utils = new FacebookUtils($facebook, $use_session);
 
-$utils->initSignedData();
+
+
+// page
+// if we are on firt page we do not use session
+if(isset($_REQUEST['page'])){
+	$page = $_REQUEST['page'];
+	$use_session = true;
+}else{
+	$use_session = false;
+}
+
+
+// use_session debug
+if(isset($_REQUEST['use_session']) && $_REQUEST['use_session'] == 0)
+	$use_session = false;
+	
+	
+// Init FacebookUtils
+$utils = new FacebookUtils($facebook); 
+$utils->initSignedData($use_session);
 
 /**
 * Si use_session = true, la lib va chercher user, user_data et user_permission en session sans faire aucun appel à l'API facebook
 * Si les données ne sont pas présente en session, la lib va utiliser l'API et enregister les données en session.
 */
-$use_session = true;
-if(isset($_REQUEST['use_session']) && $_REQUEST['use_session'] == 0)
-	$use_session = false;
 $utils->initUser($use_session);
 
 // Ask for publish_stream permission
@@ -41,8 +62,8 @@ $utils->setScope(array(
 
 // Define redirect URI for each app type we need
 $utils->setAppURI(array(
-	FacebookAppType::CANEVAS => 'http://positronic.fr/apps/facebook/facebook-utils/',
-	FacebookAppType::PAGE_TAB => 'http://positronic.fr/apps/facebook/facebook-utils/',
+	FacebookAppType::CANEVAS => 'https://apps.facebook.com/facebook-utils/',
+	FacebookAppType::PAGE_TAB => 'https://www.facebook.com/positronic.fr/?sk=app_473357126030652',
 	FacebookAppType::WEBSITE => 'http://positronic.fr/apps/facebook/facebook-utils/'
 ));
 ?>
@@ -80,16 +101,18 @@ $utils->setAppURI(array(
     </style>
   </head>
   <body>
-    <h1>FacebookUtils <?php if(isset($_REQUEST['page'])) echo ' > page' ?> </h1>
+    <h1>FacebookUtils 
+<?php 
+    echo FacebookUtils::VERSION.' ';
+    if(isset($page)) echo ' > page';
+?> 
+    </h1>
 <?php
-		// Demos
-		echo '<h2>Demos</h2><pre>';
-		$apps = $utils->getAppURI();
-		echo '<a href="'.$apps[FacebookAppType::WEBSITE].'" target="_blank">Website demo</a><br/>';
-		echo '<a href="'.$apps[FacebookAppType::CANEVAS].'" target="_blank">Canevas demo</a><br/>';
-		echo '<a href="'.$apps[FacebookAppType::PAGE_TAB].'" target="_blank">PageTab demo</a><br/>';
+		// Show user id
+		echo '<h2>User ID</h2><pre>';
+		echo $utils->getUserID();
 		echo '</pre>';
-		
+
 		// Show app type
 		echo '<h2>App type</h2><pre>';
 		echo $utils->getAppType();
@@ -137,6 +160,8 @@ $utils->setAppURI(array(
 			echo 'Not defined';
 		echo '</pre>';
 		
+		
+		
 		// Show user data
 		echo '<h2>User data (source = '.$utils->getUserDataSource().')</h2><pre>';
 		if($utils->isAuth())
@@ -144,6 +169,7 @@ $utils->setAppURI(array(
 		else
 			echo 'Needs auth';
 		echo '</pre>';
+		
 		
 		// Show user permissions
 		echo '<h2>User permissions</h2><pre>';
@@ -153,6 +179,11 @@ $utils->setAppURI(array(
 			echo 'Needs auth';
 		echo '</pre>';
 		
+		
+		// Show session
+		echo '<h2>Session</h2><pre>';
+		print_r($_SESSION);
+		echo '</pre>';
 		
 		
 		echo '<h2>Browser</h2><pre>';
@@ -168,6 +199,17 @@ $utils->setAppURI(array(
 		 * 
 		 */
 		echo '</pre>'; 
+		
+		
+		// Demos
+		echo '<h2>Demos</h2><pre>';
+		$apps = $utils->getAppURI();
+		echo '<a href="'.$apps[FacebookAppType::WEBSITE].'" target="_blank">Website demo</a><br/>';
+		echo '<a href="'.$apps[FacebookAppType::CANEVAS].'" target="_blank">Canevas demo</a><br/>';
+		echo '<a href="'.$apps[FacebookAppType::PAGE_TAB].'" target="_blank">PageTab demo</a><br/>';
+		echo '</pre>';
+		
+		
 		?>
 		<br/><a href="index.php?page=2">Next page</a><br/><br/>
   </body>
