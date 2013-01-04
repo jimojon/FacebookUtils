@@ -34,7 +34,7 @@ class FacebookUtils
 		$this->facebook = $facebook;
 		$this->app_id = $this->facebook->getAppId();
         
-        Debug::TRACE('App ID '.$this->app_id);
+        Debug::TRACE('App '.$this->app_id);
 		
 		if($auto_init_all){
 			$this->initSignedData($use_session);

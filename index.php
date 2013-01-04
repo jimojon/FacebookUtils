@@ -11,23 +11,22 @@
 * 
 */
 
-
 error_reporting(E_ALL);
 ini_set("display_errors", 1);
 
 require 'src/facebook.php'; // PHP SDK
 require 'src/facebook_utils.php';
 
+require 'debug.conf.php';
+
 // Debug
 Debug::$ACTIVE = false;
 
 // Init Facebook PHP SDK
 $facebook = new Facebook(array(
-  'appId'  => '473357126030652',
-  'secret' => '################################' 
+  'appId'  => APP_ID,
+  'secret' => SECRET
 ));
-
-
 
 
 // page
@@ -57,7 +56,8 @@ $utils->initUser($use_session);
 
 // Ask for publish_stream permission
 $utils->setScope(array(
-	FacebookPerms::publish_stream
+	FacebookPerms::publish_stream,
+	FacebookPerms::email
 ));
 
 // Define redirect URI for each app type we need
@@ -141,11 +141,19 @@ $utils->setAppURI(array(
 		
 		// Check permissions
 		echo '<h2>Has publish Stream Permission ?</h2><pre>';
-		if($utils->hasPermission('publish_stream'))
+		if($utils->hasPermission(FacebookPerms::publish_stream))
 			echo 'Yes<br/><a href="https://www.facebook.com/settings/?tab=applications" target="_blank">Change</a><br/>';
 		else
 			echo 'No<br/><a href="'.$utils->getLoginURL().'" target="_parent">Change</a><br/>';
 		echo '</pre>';
+        
+        // Check permissions
+        echo '<h2>Has email Permission ?</h2><pre>';
+        if($utils->hasPermission(FacebookPerms::email))
+            echo 'Yes<br/><a href="https://www.facebook.com/settings/?tab=applications" target="_blank">Change</a><br/>';
+        else
+            echo 'No<br/><a href="'.$utils->getLoginURL().'" target="_parent">Change</a><br/>';
+        echo '</pre>';
 		
 		// Show request
 		echo '<h2>Request</h2><pre>';
