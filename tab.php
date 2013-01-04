@@ -43,7 +43,7 @@ $utils->setScope(array(
 
 // Define redirect URI for each app type we need
 $utils->setAppURI(array(
-    FacebookAppType::PAGE_TAB => APP_TAB_URL,
+    FacebookAppType::PAGE_TAB => APP_TAB_URL
 ));
 ?>
 
