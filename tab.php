@@ -19,7 +19,7 @@ require 'src/facebook_utils.php';
 require 'tab.conf.php';
 
 // Debug
-FacebookDebug::$ACTIVE = true;
+FacebookDebug::$ACTIVE = false;
 
 // Init Facebook PHP SDK
 $facebook = new Facebook(array(
