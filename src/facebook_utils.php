@@ -170,7 +170,9 @@ class FacebookSession
 	* Core
 	*/
 
-	public function load()
+	// Called twice to fix "Error validating access token: The session was invalidated explicitly using an API call."
+	// Usefull ?
+	public function load($firstCall = true)
 	{
 		FacebookDebug::TRACE('FacebookSession :: load');
 	
@@ -203,19 +205,22 @@ class FacebookSession
 			// token is invalid if the user logged out of Facebook.
 			if ($this->user_id != null) 
 			{
-			  try {
-				// Proceed knowing you have a logged in user who's authenticated.
-				FacebookDebug::TRACE('FacebookSession :: Get user data to check token validity');
-				
-				$this->user_data = $this->getUserData();
-				$this->user_permissions = $this->getUserPermissions();
-				$this->save();
-				$this->source = 'API';
-			  } 
-			  catch (FacebookApiException $e) {
-				FacebookDebug::TRACE('FacebookSession :: '.$e->getMessage());
-				$this->clear();
-			  }
+				try {
+					// Proceed knowing you have a logged in user who's authenticated.
+					FacebookDebug::TRACE('FacebookSession :: Get user data to check token validity');
+					
+					$this->user_data = $this->getUserData();
+					$this->user_permissions = $this->getUserPermissions();
+					$this->save();
+					$this->source = 'API';
+				  } 
+				catch (FacebookApiException $e) {
+					FacebookDebug::TRACE('FacebookSession :: '.$e->getMessage());
+					$this->clear();
+					
+					if($firstCall)
+						$this->load(false);
+				}
 			}else{
 				$this->clear();
 			}
