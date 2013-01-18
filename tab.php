@@ -15,12 +15,11 @@ error_reporting(E_ALL);
 ini_set("display_errors", 1);
 
 require 'src/facebook.php'; // PHP SDK
-
 require 'src/facebook_utils.php';
 require 'tab.conf.php';
 
 // Debug
-Debug::$ACTIVE = false;
+FacebookDebug::$ACTIVE = true;
 
 // Init Facebook PHP SDK
 $facebook = new Facebook(array(
@@ -28,23 +27,24 @@ $facebook = new Facebook(array(
   'secret' => SECRET 
 ));
 
-$use_session = false;
+// Init SignedRequest
+$request = new FacebookSignedRequest($facebook);
+$request->clear(); // Clear session
+$request->load();
 
-// Init FacebookUtils
-$utils = new FacebookUtils($facebook); 
-$utils->initSignedData($use_session);
-$utils->initUser($use_session);
 
-// Ask for publish_stream permission
-$utils->setScope(array(
+// Init FacebookSession
+$session = new FacebookSession($facebook); 
+$session->setAppURI(APP_TAB_URL);
+$session->setScope(array(
     FacebookPerms::publish_stream,
     FacebookPerms::email
 ));
 
-// Define redirect URI for each app type we need
-$utils->setAppURI(array(
-    FacebookAppType::PAGE_TAB => APP_TAB_URL
-));
+$session->clear();  // Clear session
+$session->load();
+
+
 ?>
 
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
@@ -57,20 +57,47 @@ $utils->setAppURI(array(
     <body>
         <h1>Tab demo</h1>
 <?php
-if($utils->isPageLiked()){
-    if($utils->isAuth()){
-        $user = $utils->getUserData();
-        echo 'Hello '.$user['name'].', your user ID is '.$user['id'].'</br></br>';
-        if(!$utils->hasPermission(FacebookPerms::publish_stream)){
-            echo 'You must <a href="'.$utils->getLoginURL().'" target="_parent">allow publish</a> to play';
+if($request->isPageLiked()){
+    if($session->isAuth()){
+        $user = $session->getUserData();
+        echo 'Hello '.$user['name'].', your user ID is '.$user['id'].'</br>';
+		
+		// app_request
+		try {
+			$requests = $facebook->api('/me/apprequests');
+			echo count($requests['data']).' pending request</br>';
+			foreach ($requests['data'] as $value) {
+				echo 'from '.$value['from']['name'].' : '.$value['id'].'<br/>';
+				//echo'<pre>'; print_r($value); echo'</pre>';
+			}
+		}catch (FacebookApiException $e) {
+			echo $e->getMessage();
+		}
+		
+		echo '</br>';
+		deleteRequests($facebook);
+		
+        if(!$session->hasPermission(FacebookPerms::publish_stream)){
+            echo 'You must <a href="'.$session->getLoginURL().'" target="_parent">allow publish</a> to play';
         }else{
             echo 'You are ready to play !';
         }
     }else{
-        echo '<a href="'.$utils->getLoginURL().'" target="_parent">Play</a>';
+        echo '<a href="'.$session->getLoginURL().'" target="_parent">Play</a>';
     }
 }else{
     echo 'Like to play';
+}
+
+function deleteRequests($facebook){
+	try {
+		$requests = $facebook->api('/me/apprequests');
+		foreach ($requests['data'] as $value) {
+			$delete = $facebook->api($value['id'], 'DELETE');
+		}
+	}catch (FacebookApiException $e) {
+		echo $e->getMessage();
+	}
 }
 
 ?>

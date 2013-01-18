@@ -16,11 +16,10 @@ ini_set("display_errors", 1);
 
 require 'src/facebook.php'; // PHP SDK
 require 'src/facebook_utils.php';
-
-require 'debug.conf.php';
+require 'index.conf.php';
 
 // Debug
-Debug::$ACTIVE = false;
+FacebookDebug::$ACTIVE = true;
 
 // Init Facebook PHP SDK
 $facebook = new Facebook(array(
@@ -28,44 +27,54 @@ $facebook = new Facebook(array(
   'secret' => SECRET
 ));
 
-
 // page
-// if we are on firt page we do not use session
 if(isset($_REQUEST['page'])){
 	$page = $_REQUEST['page'];
 	$use_session = true;
 }else{
+	$page = 0;
 	$use_session = false;
 }
 
-
-// use_session debug
-if(isset($_REQUEST['use_session']) && $_REQUEST['use_session'] == 0)
-	$use_session = false;
-	
-	
-// Init FacebookUtils
-$utils = new FacebookUtils($facebook); 
-$utils->initSignedData($use_session);
-
-/**
-* Si use_session = true, la lib va chercher user, user_data et user_permission en session sans faire aucun appel à l'API facebook
-* Si les données ne sont pas présente en session, la lib va utiliser l'API et enregister les données en session.
+// Init SignedRequest
+$request = new FacebookSignedRequest($facebook, $use_session);
+/*
+if(!$use_session)
+	$request->clear(); // Clear session
 */
-$utils->initUser($use_session);
+$request->load();
 
-// Ask for publish_stream permission
-$utils->setScope(array(
-	FacebookPerms::publish_stream,
-	FacebookPerms::email
+// Define app url
+switch($request->getAppType())
+{
+	case FacebookAppType::CANEVAS :
+	$appURL = 'https://apps.facebook.com/facebook-utils/';
+	break;
+	
+	case FacebookAppType::PAGE_TAB :
+	$appURL = 'https://www.facebook.com/positronic.fr/?sk=app_473357126030652';
+	break;
+	
+	case FacebookAppType::WEBSITE :
+	$appURL = 'http://positronic.fr/apps/facebook/facebook-utils/';
+	break;
+}
+
+// Init FacebookSession
+$session = new FacebookSession($facebook, $use_session); 
+$session->setAppURI($appURL);
+$session->setScope(array(
+    FacebookPerms::publish_stream,
+    FacebookPerms::email
 ));
 
-// Define redirect URI for each app type we need
-$utils->setAppURI(array(
-	FacebookAppType::CANEVAS => 'https://apps.facebook.com/facebook-utils/',
-	FacebookAppType::PAGE_TAB => 'https://www.facebook.com/positronic.fr/?sk=app_473357126030652',
-	FacebookAppType::WEBSITE => 'http://positronic.fr/apps/facebook/facebook-utils/'
-));
+/*
+if(!$use_session)
+	$session->clear();  // Clear session
+*/
+$session->load();
+
+
 ?>
 
 <!doctype html>
@@ -103,25 +112,27 @@ $utils->setAppURI(array(
   <body>
     <h1>FacebookUtils 
 <?php 
-    echo FacebookUtils::VERSION.' ';
-    if(isset($page)) echo ' > page';
+    if($page !=0) 
+		echo ' > page '.$page;
 ?> 
     </h1>
+	<a href="index.php?page=<?php echo ($page+1); ?>">Next page</a><br/><br/>
 <?php
 		// Show user id
 		echo '<h2>User ID</h2><pre>';
-		echo $utils->getUserID();
+		echo $session->getUserID();
 		echo '</pre>';
 
 		// Show app type
 		echo '<h2>App type</h2><pre>';
-		echo $utils->getAppType();
-		if($utils->isPageTab()){
-			echo ' (liked = '.($utils->isPageLiked() ? 'true' : 'false').')';
+		echo $request->getAppType();
+		if($request->isPageTab()){
+			echo ' (liked = '.($request->isPageLiked() ? 'true' : 'false').')';
 		}
 		echo '</pre>';
 		
 		// Error
+		/*
 		if($utils->hasError()){
 			echo '<h2>Error</h2><pre>';
 			$error = $utils->getError();
@@ -130,29 +141,30 @@ $utils->setAppURI(array(
 			echo 'Description : '.$error->getErrorDescription().'<br/>';
 			echo '</pre>';
 		}
+		*/
 		
 		// Check auth
 		echo '<h2>Is Auth ?</h2><pre>';
-		if($utils->isAuth())
+		if($session->isAuth())
 			echo 'Yes<br/><a href="https://www.facebook.com/settings/?tab=applications" target="_blank">Change</a><br/>';
 		else
-			echo 'No<br/><a href="'.$utils->getLoginURL().'" target="_parent">Change</a><br/>';
+			echo 'No<br/><a href="'.$session->getLoginURL().'" target="_parent">Change</a><br/>';
 		echo '</pre>';
 		
 		// Check permissions
 		echo '<h2>Has publish Stream Permission ?</h2><pre>';
-		if($utils->hasPermission(FacebookPerms::publish_stream))
+		if($session->hasPermission(FacebookPerms::publish_stream))
 			echo 'Yes<br/><a href="https://www.facebook.com/settings/?tab=applications" target="_blank">Change</a><br/>';
 		else
-			echo 'No<br/><a href="'.$utils->getLoginURL().'" target="_parent">Change</a><br/>';
+			echo 'No<br/><a href="'.$session->getLoginURL().'" target="_parent">Change</a><br/>';
 		echo '</pre>';
         
         // Check permissions
         echo '<h2>Has email Permission ?</h2><pre>';
-        if($utils->hasPermission(FacebookPerms::email))
+        if($session->hasPermission(FacebookPerms::email))
             echo 'Yes<br/><a href="https://www.facebook.com/settings/?tab=applications" target="_blank">Change</a><br/>';
         else
-            echo 'No<br/><a href="'.$utils->getLoginURL().'" target="_parent">Change</a><br/>';
+            echo 'No<br/><a href="'.$session->getLoginURL().'" target="_parent">Change</a><br/>';
         echo '</pre>';
 		
 		// Show request
@@ -161,9 +173,9 @@ $utils->setAppURI(array(
 		echo '</pre>';
 		
 		// Show signed request
-		echo '<h2>Signed request (source = '.$utils->getSignedDataSource().')</h2><pre>';
-		if($utils->hasSignedData())
-			print_r($utils->getSignedData());
+		echo '<h2>Signed request (source = '.$request->getSource().')</h2><pre>';
+		if($request->hasData())
+			print_r($request->getData());
 		else
 			echo 'Not defined';
 		echo '</pre>';
@@ -171,9 +183,9 @@ $utils->setAppURI(array(
 		
 		
 		// Show user data
-		echo '<h2>User data (source = '.$utils->getUserDataSource().')</h2><pre>';
-		if($utils->isAuth())
-			print_r($utils->getUserData());
+		echo '<h2>User data (source = '.$session->getSource().')</h2><pre>';
+		if($session->isAuth())
+			print_r($session->getUserData());
 		else
 			echo 'Needs auth';
 		echo '</pre>';
@@ -181,8 +193,8 @@ $utils->setAppURI(array(
 		
 		// Show user permissions
 		echo '<h2>User permissions</h2><pre>';
-		if($utils->isAuth())
-			print_r($utils->getUserPermissions());
+		if($session->isAuth())
+			print_r($session->getUserPermissions());
 		else
 			echo 'Needs auth';
 		echo '</pre>';
@@ -196,7 +208,7 @@ $utils->setAppURI(array(
 		
 		echo '<h2>Browser</h2><pre>';
 		echo $_SERVER['HTTP_USER_AGENT'] . "\n\n";
-		echo 'Safari : '.(Browser::isSafari() ? 'true' : 'false'); 
+		echo 'Safari : '.(FacebookBrowserUtil::isSafari() ? 'true' : 'false'); 
 		/**
 		try {
 			$browser = get_browser(null, true);
@@ -204,21 +216,21 @@ $utils->setAppURI(array(
 		}catch(Exception $e){
 			//echo $e->getMessage();
 		}
-		 * 
-		 */
+		*/
 		echo '</pre>'; 
 		
 		
 		// Demos
+		/*
 		echo '<h2>Demos</h2><pre>';
 		$apps = $utils->getAppURI();
 		echo '<a href="'.$apps[FacebookAppType::WEBSITE].'" target="_blank">Website demo</a><br/>';
 		echo '<a href="'.$apps[FacebookAppType::CANEVAS].'" target="_blank">Canevas demo</a><br/>';
 		echo '<a href="'.$apps[FacebookAppType::PAGE_TAB].'" target="_blank">PageTab demo</a><br/>';
 		echo '</pre>';
-		
+		*/
 		
 		?>
-		<br/><a href="index.php?page=2">Next page</a><br/><br/>
+		
   </body>
 </html>

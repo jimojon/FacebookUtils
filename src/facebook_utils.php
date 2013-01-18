@@ -6,152 +6,256 @@
 * https://github.com/jonasmonnier/FacebookUtils
 *
 * @author Jonas
-* @version 0.1.6
-* @date 2013-01-03
+* @version 0.1.7
+* @date 2013-01-18
 * 
 */
 
-class FacebookUtils
+class FacebookSignedRequest
 {
-	const VERSION = '0.1.6';
+	const VERSION = '0.1.1';
+
+	/*private*/ var $data;
+	/*private*/ var $facebook;
+	/*private*/ var $session;
+	/*private*/ var $source;
+
+	public function __construct($facebook, $session = true){
+		FacebookDebug::TRACE('SignedRequest '.self::VERSION.' - '.$facebook->getAppID());
+		$this->facebook = $facebook;
+		$this->session = $session;
+		FacebookSessionUtil::init($facebook);
+	}
+	
+	/**
+	* Core
+	*/
+	
+	public function save(){
+		if($this->hasData()){
+			FacebookDebug::TRACE('SignedRequest :: save');
+			FacebookSessionUtil::save('signed_request', $this->data);
+		}else{
+			FacebookDebug::TRACE('SignedRequest :: nothing to save');
+		}
+	}
+	public function clear(){
+		FacebookDebug::TRACE('SignedRequest :: clear');
+		FacebookSessionUtil::clear('signed_request');
+	}
+	public function load(){
+		FacebookDebug::TRACE('SignedRequest :: load');
+		
+		// get data from facebook
+		$this->data = $this->facebook->getSignedRequest();
+		
+		// autosave in session
+		if($this->hasData()){
+			$this->source = 'SDK';
+			if($this->session)
+				$this->save();
+		
+		// check session if data is null
+		}else{
+			$this->data = FacebookSessionUtil::load('signed_request');
+			$this->source = 'session';
+		}
+		
+		if($this->hasData()){
+			FacebookDebug::TRACE('SignedRequest :: load success from '.$this->source);
+		}else{
+			FacebookDebug::TRACE('SignedRequest :: load error');
+		}
+	}
+	
+	public function getData(){
+		return $this->data;
+	}
+	
+	public function hasData(){
+		return $this->data != null;
+	}
+	
+	public function getSource(){
+		return $this->source;
+	}
+	
+	/**
+	* Data
+	*/
+	
+	public function getPageID(){
+		return $this->data['page']['id'];
+	}
+	
+	public function isPageLiked(){
+		return $this->data['page']['liked'] == 1;
+	}
+	
+	public function isUserAdmin(){
+		return $this->data['page']['admin'] == 1;
+	}
+	
+	public function getUserCountry(){
+		return $this->data['user']['country'];
+	}
+	
+	public function getUserLocale(){
+		return $this->data['user']['locale'];
+	}
+	
+	public function getUserID(){
+		return $this->data['user_id'];
+	}
+	
+	public function isUserAmin(){
+		if($this->hasSignedData())
+			return $this->signed_data['page']['admin'] == 1;
+		return null;
+    }
+	
+	public function hasAppData(){
+		return $this->data['app_data'] != null;
+	}
+	
+	public function getAppData(){
+		return $this->data['app_data'];
+	}
+	
+	// potentialy bugged with signed_data stored in session
+	public function getAppType(){
+        if(isset($this->data['page'])){
+            return FacebookAppType::PAGE_TAB;
+        }else if(isset($this->data['user'])){
+            return FacebookAppType::CANEVAS;
+        }else{
+            return FacebookAppType::WEBSITE;
+        }
+    }
+	
+	public function isWebsite(){
+		return $this->getAppType() == FacebookAppType::WEBSITE;
+	}
+	
+	public function isPageTab(){
+		return $this->getAppType() == FacebookAppType::PAGE_TAB;
+	}
+	
+	public function isCanevas(){
+		return $this->getAppType() == FacebookAppType::CANEVAS;
+	}
+}
+
+class FacebookSession
+{
+	const VERSION = '0.1.8';
 
     /*private*/ var $facebook;
+    /*private*/ var $session;
     /*private*/ var $scope;
-    /*private*/ var $signed_data;
-    /*private*/ var $signed_data_source;
-    /*private*/ var $user;
-    /*private*/ var $user_source;
+	/*private*/ var $source;
+    /*private*/ var $user_id;
     /*private*/ var $user_data;
     /*private*/ var $user_permissions;
     /*private*/ var $app_uri;
-    /*private*/ var $app_id;
-    /*private*/ var $error;
 	
-	public function __construct($facebook, $use_session = true, $auto_init_all = false)
+	public function __construct($facebook, $session = true)
 	{
-		Debug::TRACE('FacebookUtils '.self::VERSION);
-		
+		FacebookDebug::TRACE('FacebookSession '.self::VERSION.' - '.$facebook->getAppID());
 		$this->facebook = $facebook;
-		$this->app_id = $this->facebook->getAppId();
-        
-        Debug::TRACE('App '.$this->app_id);
-		
-		if($auto_init_all){
-			$this->initSignedData($use_session);
-			$this->initUser($use_session);
-		}
+		$this->session = $session;
 	}
-
+	
 	/**
-	* Session management
+	* Core
 	*/
-	private function getSessionName(){
-		return 'fb_utils_'.$this->app_id;
-	}
-	private function hasSessionData($name){
-		return isset($_SESSION[$this->getSessionName()][$name]);
-	}
-	private function getSessionData($name){
-		if(isset($_SESSION[$this->getSessionName()][$name]))
-			return $_SESSION[$this->getSessionName()][$name];
-		return null;
-	}
-	private function setSessionData($name, $value){
-		$_SESSION[$this->getSessionName()][$name] = $value;
-	}
-	private function clearSessionData($name){
-		unset($_SESSION[$this->getSessionName()][$name]);
-	}
-	
-	
-	/**
-     * Signed data
-     */
-	public function initSignedData($use_session = true)
+
+	public function load()
 	{
-		$this->signed_data = $this->facebook->getSignedRequest();
-		
-		if($use_session)
+		FacebookDebug::TRACE('FacebookSession :: load');
+	
+		$this->source = '';
+	
+		// Try to auth user using session
+		if($this->session)
 		{
-			// if PHP SDK return a signed request
-			if($this->signed_data != null){
-				$this->setSessionData('signed_data', $this->signed_data);
-				$this->signed_data_source = 'SDK';
-			}
-				
-			// else if we have a signed data in session
-			else if($this->hasSessionData('signed_data')){
-				$this->signed_data = $this->getSessionData('signed_data');
-				$this->signed_data_source = 'SESSION';
+			FacebookDebug::TRACE('FacebookSession :: Try to auth user using session');
+			
+			if(FacebookSessionUtil::has('user_id') && FacebookSessionUtil::has('user_data') &&FacebookSessionUtil::has('user_permissions'))
+			{
+				$this->user_id = FacebookSessionUtil::load('user_id');
+				$this->user_data = FacebookSessionUtil::load('user_data');
+				$this->user_permissions = FacebookSessionUtil::load('user_permissions');
+				$this->source = 'session';
 			}
 		}
-	}
 	
-	public function initUser($use_session = true)
-	{
-		$userFromSDK = $this->facebook->getUser();
-		$userFromSession = $this->getSessionData('user_id');
-		
-		Debug::TRACE('User ID '.$userFromSDK.' (SDK)');
-		Debug::TRACE('User ID '.$userFromSession.' (session)');
-	
-		// Auth user using API
-		if(!$use_session || $userFromSession == null || $userFromSession != $userFromSDK){
-			Debug::TRACE('Auth user using API');
-			$this->user = $this->facebook->getUser(); 
-			$this->user_source = 'API';
+		// Try to auth user using API
+		if($this->user_id == null)
+		{
+			FacebookDebug::TRACE('FacebookSession :: Try to auth user using API');
+			
+			$this->user_id = $this->facebook->getUser(); 
 			
 			// We may or may not have this data based on whether the user is logged in.
 			// If we have a $user id here, it means we know the user is logged into
 			// Facebook, but we don't know if the access token is valid. An access
 			// token is invalid if the user logged out of Facebook.
-			if ($this->user) 
+			if ($this->user_id != null) 
 			{
 			  try {
 				// Proceed knowing you have a logged in user who's authenticated.
-				Debug::TRACE('Try to get user data');
+				FacebookDebug::TRACE('FacebookSession :: Get user data to check token validity');
+				
 				$this->user_data = $this->getUserData();
 				$this->user_permissions = $this->getUserPermissions();
-				$this->setSessionData('user_id', $this->user);
-				
+				$this->save();
+				$this->source = 'API';
 			  } 
 			  catch (FacebookApiException $e) {
-				Debug::TRACE('Catch error trying to get user data'.$e->getMessage());
-				$this->clearUser();
+				FacebookDebug::TRACE('FacebookSession :: '.$e->getMessage());
+				$this->clear();
 			  }
 			}else{
-				$this->clearUser();
+				$this->clear();
 			}
-			
-		// Auth user using session
-		}else if(
-			$this->hasSessionData('user_id') && 
-			$this->hasSessionData('user_data') &&
-			$this->hasSessionData('user_permissions')
-		){
-			Debug::TRACE('Auth user using session');
-			$this->user = $this->getSessionData('user_id');
-			$this->user_data = $this->getSessionData('user_data');
-			$this->user_permissions = $this->getSessionData('user_permissions');
-			$this->user_source = 'SESSION';
+		} 
 		
-		// User not auth
-		}else{
-			Debug::TRACE('User not auth');
-			$this->clearUser();
-		}
+		if($this->source == '')
+			FacebookDebug::TRACE('FacebookSession :: User not auth');
+		else
+			FacebookDebug::TRACE('FacebookSession :: User auth from '.$this->source.', '.$this->user_id);
+	}
+	
+	public function save()
+	{
+		FacebookDebug::TRACE('FacebookSession :: save');
+
+		FacebookSessionUtil::save('user_id', $this->user_id);
+		FacebookSessionUtil::save('user_data', $this->user_data);
+		FacebookSessionUtil::save('user_permissions', $this->user_permissions);
 	}
 
-	private function clearUser(){
-		Debug::TRACE('clear user');
-		$this->user = null;
+	public function clear()
+	{
+		FacebookDebug::TRACE('FacebookSession :: clear');
+		
+		$this->user_id = null;
 		$this->user_data = null;
 		$this->user_permissions = null;
 		
-		$this->clearSessionData('user_id');
-		$this->clearSessionData('user_data');
-		$this->clearSessionData('user_permissions');
+		FacebookSessionUtil::clear('user_id');
+		FacebookSessionUtil::clear('user_data');
+		FacebookSessionUtil::clear('user_permissions');
 	}
+	
+	public function getSource(){
+		return $this->source;
+	}
+	
+	/**
+	* Data
+	*/
 	
 	public function setScope($scope){
         $this->scope = $scope;
@@ -172,121 +276,43 @@ class FacebookUtils
         if(count($this->scope) > 0)
             $params['scope'] = join($this->scope, ',');
 			
-        if($this->app_uri != null && isset($this->app_uri[$this->getAppType()]))
-            $params['redirect_uri'] = $this->app_uri[$this->getAppType()];
+        if($this->app_uri != null)
+            $params['redirect_uri'] = $this->app_uri;
         
         return $this->facebook->getLoginUrl($params);
     }
 	
     public function isAuth(){
-        return $this->user != null;
+        return $this->user_id != null;
     }
 	
-	public function hasError(){
-		return $this->getError() != null;
+	public function getUserID(){
+		return $this->user_id;
 	}
-	
-	public function getError(){
-		if($this->error == null && isset($_REQUEST['error'])){
-			$this->error = new FacebookError($_REQUEST['error']);
-			if(isset($_REQUEST['error_reason']))
-				$this->error->error_reason = $_REQUEST['error_reason'];
-			if(isset($_REQUEST['error_description']))
-				$this->error->error_description = $_REQUEST['error_description'];
+
+    public function getUserData($clear = false){
+        if($this->isAuth() && ($this->user_data == null || $clear)){
+            $this->user_data = $this->facebook->api('/me/');
+			FacebookSessionUtil::save('user_data', $this->user_data);
 		}
-		return $this->error;
-	}
-    
-    public function hasPermission($name){
+        return $this->user_data;
+    }
+	
+	public function getUserPermissions($clear = false){
+        if($this->isAuth() && ($this->user_permissions == null || $clear)){
+            $this->user_permissions = $this->facebook->api('/me/permissions');
+			FacebookSessionUtil::save('user_permissions', $this->user_permissions); 
+		}
+        return $this->user_permissions; 
+    }
+	
+	public function hasPermission($name){
         if(!isset($this->user_permissions)){ 
             return null;
         }else{
             return isset($this->user_permissions['data'][0][$name]) && $this->user_permissions['data'][0][$name] == '1';
         }
     }
-	
-	public function getUserID(){
-		return $this->user;
-	}
-	
-	public function getUserDataSource(){
-		return $this->user_source;
-	}
-    
-    public function getUserPermissions($update = false){
-        if($this->isAuth() && ($this->user_permissions == null || $update)){
-            $this->user_permissions = $this->facebook->api('/me/permissions');
-			$this->setSessionData('user_permissions', $this->user_permissions); 
-		}
-        return $this->user_permissions; 
-    }
-    
-    public function getUserData($update = false){
-        if($this->isAuth() && ($this->user_data == null || $update)){
-            $this->user_data = $this->facebook->api('/me/');
-			$this->setSessionData('user_data', $this->user_data);
-		}
-        return $this->user_data;
-    }
-    
-    public function hasSignedData(){
-        return $this->signed_data != null;
-    }
-	
-	public function getSignedDataSource(){
-		return $this->signed_data_source;
-	}
-
-    public function getSignedData(){
-        return $this->signed_data;
-    }
-	
-    public function isPageLiked(){
-		if($this->hasSignedData())
-			return $this->signed_data['page']['liked'] == 1;
-		return null;
-    }
-	
-	public function hasAppData(){
-		if($this->hasSignedData())
-			return isset($this->signed_data['app_data']);
-		return null;
-	}
-	
-	public function getAppData(){
-		if($this->hasSignedData())
-			$this->signed_data['app_data'];
-		return null;
-	}
-	
-	public function isPageAmin(){
-		if($this->hasSignedData())
-			return $this->signed_data['page']['admin'] == 1;
-		return null;
-    }
-	
-	// potentialy bugged with signed_data stored in session
-	public function getAppType(){
-        if(isset($this->signed_data['page'])){
-            return FacebookAppType::PAGE_TAB;
-        }else if(isset($this->signed_data['user'])){
-            return FacebookAppType::CANEVAS;
-        }else{
-            return FacebookAppType::WEBSITE;
-        }
-    }
-	
-	public function isWebsite(){
-		return $this->getAppType() == FacebookAppType::WEBSITE;
-	}
-	
-	public function isPageTab(){
-		return $this->getAppType() == FacebookAppType::PAGE_TAB;
-	}
-	
-	public function isCanevas(){
-		return $this->getAppType() == FacebookAppType::CANEVAS;
-	}
 }
 
 /**
@@ -295,20 +321,34 @@ class FacebookUtils
 */
 class FacebookError 
 {
-	var $error;
-	var $error_reason;
-	var $error_description;
+	/* public */ var $error;
+	/* public */ var $error_reason;
+	/* public */ var $error_description;
 	
-	public function __construct($error = ''){
-		$this->error = $error;
+	public function __construct()
+	{
+		if(isset($_REQUEST['error']))
+			$this->error = $_REQUEST['error'];
+			
+		if(isset($_REQUEST['error_reason']))
+			$this->$error_reason = $_REQUEST['error_reason'];
+			
+		if(isset($_REQUEST['error_description']))
+			$this->$error_description = $_REQUEST['error_description'];
+	}
+	
+	public function hasError(){
+		return $this->error != null;
 	}
 	
 	public function getError(){
 		return $this->error;
 	}
+	
 	public function getErrorReason(){
 		return $this->error_reason;
 	}
+	
 	public function getErrorDescription(){
 		return $this->error_description;
 	}
@@ -414,7 +454,36 @@ class FacebookPerms
 	const manage_pages = 'manage_pages';
 }
 
-class Browser {
+
+class FacebookSessionUtil 
+{
+	static $facebook;
+
+	public static function init($facebook){
+		self::$facebook = $facebook;
+	}
+	
+	public static function getSessionName(){
+		return 'fb_utils_'.self::$facebook->getAppID();
+	}
+	public static function has($name){
+		return isset($_SESSION[self::getSessionName()][$name]);
+	}
+	public static function load($name){
+		if(isset($_SESSION[self::getSessionName()][$name]))
+			return $_SESSION[self::getSessionName()][$name];
+		return null;
+	}
+	public static function save($name, $value){
+		$_SESSION[self::getSessionName()][$name] = $value;
+	}
+	public static function clear($name){
+		unset($_SESSION[self::getSessionName()][$name]);
+	}
+}
+
+
+class FacebookBrowserUtil {
 
 	public static function isSafari(){
 		$u = $_SERVER['HTTP_USER_AGENT'];
@@ -422,13 +491,14 @@ class Browser {
 	}
 }
 
-class Debug {
+
+class FacebookDebug {
 
 	public static $ACTIVE = false;
 
 	public static function TRACE($s){
 		if(self::$ACTIVE)
-			echo '<pre>Debug :: '.$s.'</pre>';
+			echo '<pre>FacebookDebug :: '.$s.'</pre>';
 	}
 }
 
