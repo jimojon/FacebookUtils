@@ -12,14 +12,20 @@
 */
 
 error_reporting(E_ALL);
-ini_set("display_errors", 1);
+ini_set("display_errors", 1); 
 
-require 'src/facebook.php'; // PHP SDK
+require 'src/utils.php';
 require 'src/facebook_utils.php';
+require 'src/facebook.php'; // PHP SDK
 require 'index.conf.php';
+
 
 // Debug
 FacebookDebug::$ACTIVE = true;
+
+// Safari fix 
+TransSID::init();
+
 
 // Init Facebook PHP SDK
 $facebook = new Facebook(array(
@@ -29,7 +35,7 @@ $facebook = new Facebook(array(
 
 // page
 if(isset($_REQUEST['page'])){
-	$page = $_REQUEST['page'];
+	$page = urlencode($_REQUEST['page']);
 	$use_session = true;
 }else{
 	$page = 0;
@@ -43,6 +49,7 @@ if(!$use_session)
 	$request->clear(); // Clear session
 */
 $request->load();
+
 
 // Define app url
 switch($request->getAppType())
@@ -73,7 +80,6 @@ if(!$use_session)
 	$session->clear();  // Clear session
 */
 $session->load();
-
 
 ?>
 
@@ -116,7 +122,13 @@ $session->load();
 		echo ' > page '.$page;
 ?> 
     </h1>
-	<a href="index.php?page=<?php echo ($page+1); ?>">Next page</a><br/><br/>
+	
+	<?php
+		$u = 'index.php?page='.($page+1);
+		//$u = addSID($u, $sid);
+	?>
+
+	<a href="<?php echo $u ?>">Next page</a><br/><br/>
 <?php
 		// Show user id
 		echo '<h2>User ID</h2><pre>';

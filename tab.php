@@ -6,8 +6,8 @@
 * https://github.com/jonasmonnier/FacebookUtils
 *
 * @author Jonas
-* @version 0.1.6
-* @date 2013-01-03
+* @version 0.1.9
+* @date 2013-01-29
 * 
 */
 
@@ -16,10 +16,14 @@ ini_set("display_errors", 1);
 
 require 'src/facebook.php'; // PHP SDK
 require 'src/facebook_utils.php';
+require 'src/utils.php';
 require 'tab.conf.php';
 
 // Debug
-FacebookDebug::$ACTIVE = false;
+FacebookDebug::$ACTIVE = FALSE;
+
+// Session
+TransSID::init(); 
 
 // Init Facebook PHP SDK
 $facebook = new Facebook(array(
@@ -68,14 +72,39 @@ if($request->isPageLiked()){
 			echo count($requests['data']).' pending request</br>';
 			foreach ($requests['data'] as $value) {
 				echo 'from '.$value['from']['name'].' : '.$value['id'].'<br/>';
-				//echo'<pre>'; print_r($value); echo'</pre>';
+				//print_a($value);
 			}
 		}catch (FacebookApiException $e) {
 			echo $e->getMessage();
 		}
 		
 		echo '</br>';
-		deleteRequests($facebook);
+		//deleteRequests($facebook);
+		
+		// get scores
+		$score = 0;
+		
+		try {
+			$scores = $facebook->api('/me/scores');
+			$score = $scores['data'][0]['score'];
+			//print_a($scores);
+			echo 'Your score is '.$score;
+		}catch (FacebookApiException $e) {
+			echo $e->getMessage();
+		}
+		
+		echo '</br>';
+		echo '</br>';
+		
+		// set scores
+		try {
+			$scores = $facebook->api('me/scores', 'POST', array(
+				'score' => ($score+1)
+			));
+		}
+		catch(FacebookApiException $e){
+			echo $e->getMessage();
+		}
 		
         if(!$session->hasPermission(FacebookPerms::publish_stream)){
             echo 'You must <a href="'.$session->getLoginURL().'" target="_parent">allow publish</a> to play';

@@ -6,14 +6,86 @@
 * https://github.com/jonasmonnier/FacebookUtils
 *
 * @author Jonas
-* @version 0.1.7
-* @date 2013-01-18
+* @version 0.1.9
+* @date 2013-01-29
 * 
 */
 
+//http://msdn.microsoft.com/en-us/library/ms537341%28v=vs.85%29.aspx
+header('P3P: CP="IDC DSP COR CURa ADMa OUR IND PHY ONL COM STA"');
+
+
+//http://php.net/manual/fr/session.idpassing.php
+//http://php.net/manual/en/session.constants.php
+class TransSID 
+{
+	public static $TRANS_SID_NAME = 'PHPSESSID';
+	public static $TRANS_SID_USED = false;
+	public static $SAFARI_ONLY = true;
+
+	public static function init()
+	{
+		if(self::isStarted()){
+			FacebookDebug::TRACE('TransSID :: ERROR = Session already started (session_start)');
+			return;
+		}
+	
+		if(BrowserUtil::isSafari() || !self::$SAFARI_ONLY){
+			if(isset($_REQUEST[self::$TRANS_SID_NAME])){
+				session_id($_REQUEST[self::$TRANS_SID_NAME]);
+				self::$TRANS_SID_USED = true;
+				
+			}
+		}
+
+		session_start();
+		
+		FacebookDebug::TRACE('TransSID :: isSafari() = '.Utils::formatBoolean(BrowserUtil::isSafari()));
+		FacebookDebug::TRACE('TransSID :: isActive() = '.Utils::formatBoolean(self::isActive()));
+		FacebookDebug::TRACE('TransSID :: isUsed() = '.Utils::formatBoolean(self::isUsed()));
+		//FacebookDebug::TRACE('TransSID :: isStarted() = '.Utils::formatBoolean(self::isStarted()).);
+	}
+	
+	public static function addSID($url, $sid){
+		if(strrpos($url, '?')){
+			$url = $url.'&'.$TRANS_SID_NAME.'='.$sid;
+		}else{
+			$url = $url.'?'.$TRANS_SID_NAME.'='.$sid;
+		}
+		return $url;
+	}
+	
+	public static function setActive($b){
+		ini_set('session.use_trans_sid', $b);
+	}
+	
+	//Todo PHP 5.4 : session_status() == PHP_SESSION_ACTIVE
+	public static function isStarted(){
+		return session_id() != '';
+	}
+	
+	public static function isActive(){
+		return ini_get('session.use_trans_sid');
+	}
+	
+	public static function isUsed(){
+		return self::$TRANS_SID_USED;
+	}
+}
+
+
+class BrowserUtil {
+
+	public static function isSafari(){
+		$u = $_SERVER['HTTP_USER_AGENT'];
+		return preg_match('/Safari/', $u) && !preg_match('/Chrome/', $u);
+	}
+}
+
+
 class FacebookSignedRequest
 {
-	const VERSION = '0.1.1';
+	const VERSION = '0.1.9';
 
 	/*private*/ var $data;
 	/*private*/ var $facebook;
@@ -115,11 +187,13 @@ class FacebookSignedRequest
     }
 	
 	public function hasAppData(){
-		return $this->data['app_data'] != null;
+		return isset($this->data['app_data']);
 	}
 	
 	public function getAppData(){
-		return $this->data['app_data'];
+		if($this->hasAppData())
+			return $this->data['app_data'];
+		return null;
 	}
 	
 	// potentialy bugged with signed_data stored in session
@@ -148,7 +222,7 @@ class FacebookSignedRequest
 
 class FacebookSession
 {
-	const VERSION = '0.1.8';
+	const VERSION = '0.1.9';
 
     /*private*/ var $facebook;
     /*private*/ var $session;
@@ -460,6 +534,7 @@ class FacebookPerms
 }
 
 
+
 class FacebookSessionUtil 
 {
 	static $facebook;
@@ -484,15 +559,6 @@ class FacebookSessionUtil
 	}
 	public static function clear($name){
 		unset($_SESSION[self::getSessionName()][$name]);
-	}
-}
-
-
-class FacebookBrowserUtil {
-
-	public static function isSafari(){
-		$u = $_SERVER['HTTP_USER_AGENT'];
-		return preg_match('/Safari/', $u) && !preg_match('/Chrome/', $u);
 	}
 }
 
