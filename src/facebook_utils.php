@@ -14,9 +14,12 @@
 //http://msdn.microsoft.com/en-us/library/ms537341%28v=vs.85%29.aspx
 header('P3P: CP="IDC DSP COR CURa ADMa OUR IND PHY ONL COM STA"');
 
-
+// Work in progress
 //http://php.net/manual/fr/session.idpassing.php
 //http://php.net/manual/en/session.constants.php
+//http://php.net/manual/fr/session.security.php
+//http://php.net/manual/fr/function.ob-start.php
+//php.net/manual/fr/ref.session.php#53809
 class TransSID 
 {
 	public static $TRANS_SID_NAME = 'PHPSESSID';
@@ -34,7 +37,6 @@ class TransSID
 			if(isset($_REQUEST[self::$TRANS_SID_NAME])){
 				session_id($_REQUEST[self::$TRANS_SID_NAME]);
 				self::$TRANS_SID_USED = true;
-				
 			}
 		}
 
@@ -64,6 +66,7 @@ class TransSID
 		return session_id() != '';
 	}
 	
+	// Todo : Check session.use_only_cookies
 	public static function isActive(){
 		return ini_get('session.use_trans_sid');
 	}
