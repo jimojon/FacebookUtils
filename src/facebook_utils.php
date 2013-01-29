@@ -87,10 +87,10 @@ class FacebookSignedRequest
 {
 	const VERSION = '0.1.9';
 
-	/*private*/ var $data;
-	/*private*/ var $facebook;
-	/*private*/ var $session;
-	/*private*/ var $source;
+	private $data;
+	private $facebook;
+	private $session;
+	private $source;
 
 	public function __construct($facebook, $session = true){
 		FacebookDebug::TRACE('SignedRequest '.self::VERSION.' - '.$facebook->getAppID());
@@ -224,14 +224,14 @@ class FacebookSession
 {
 	const VERSION = '0.1.9';
 
-    /*private*/ var $facebook;
-    /*private*/ var $session;
-    /*private*/ var $scope;
-	/*private*/ var $source;
-    /*private*/ var $user_id;
-    /*private*/ var $user_data;
-    /*private*/ var $user_permissions;
-    /*private*/ var $app_uri;
+    private $facebook;
+    private $session;
+    private $scope;
+	private $source;
+    private $user_id;
+    private $user_data;
+    private $user_permissions;
+    private $app_uri;
 	
 	public function __construct($facebook, $session = true)
 	{
@@ -400,9 +400,9 @@ class FacebookSession
 */
 class FacebookError 
 {
-	/* public */ var $error;
-	/* public */ var $error_reason;
-	/* public */ var $error_description;
+	public $error;
+	public $error_reason;
+	public $error_description;
 	
 	public function __construct()
 	{
@@ -537,7 +537,7 @@ class FacebookPerms
 
 class FacebookSessionUtil 
 {
-	static $facebook;
+	private static $facebook;
 
 	public static function init($facebook){
 		self::$facebook = $facebook;
@@ -561,6 +561,9 @@ class FacebookSessionUtil
 		unset($_SESSION[self::getSessionName()][$name]);
 	}
 }
+
+
+
 
 
 class FacebookDebug {
