@@ -122,7 +122,7 @@ $session->load();
 		echo ' > page '.$page;
 ?> 
     </h1>
-	
+	<p><a href="https://github.com/jonasmonnier/FacebookUtils" target="_blank">Source</a></p>
 	<?php
 		$u = 'index.php?page='.($page+1);
 		//$u = addSID($u, $sid);
