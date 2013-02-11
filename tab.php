@@ -6,21 +6,23 @@
 * https://github.com/jonasmonnier/FacebookUtils
 *
 * @author Jonas
-* @version 0.1.9
-* @date 2013-01-29
+* @version 0.2.0
+* @date 2013-02-11
 * 
 */
 
 error_reporting(E_ALL);
 ini_set("display_errors", 1);
 
+require 'src/CommonUtils.php';
+require 'src/TransSID.php';
+require 'src/FacebookUtils.php';
+
 require 'src/facebook.php'; // PHP SDK
-require 'src/facebook_utils.php';
-require 'src/utils.php';
 require 'tab.conf.php';
 
 // Debug
-FacebookDebug::$ACTIVE = FALSE;
+Debug::$ACTIVE = FALSE;
 
 // Session
 TransSID::init(); 
@@ -28,14 +30,13 @@ TransSID::init();
 // Init Facebook PHP SDK
 $facebook = new Facebook(array(
   'appId'  => APP_ID,
-  'secret' => SECRET 
+  'secret' => APP_SECRET 
 ));
 
 // Init SignedRequest
 $request = new FacebookSignedRequest($facebook);
 $request->clear(); // Clear session
 $request->load();
-
 
 // Init FacebookSession
 $session = new FacebookSession($facebook); 
@@ -60,53 +61,53 @@ $session->load();
     </head>
     <body>
         <h1>Tab demo</h1>
-		<p><a href="https://github.com/jonasmonnier/FacebookUtils" target="_blank">Source</a></p>
+        <p><a href="https://github.com/jonasmonnier/FacebookUtils" target="_blank">Source</a></p>
 <?php
 if($request->isPageLiked()){
     if($session->isAuth()){
         $user = $session->getUserData();
         echo 'Hello '.$user['name'].', your user ID is '.$user['id'].'</br>';
-		
-		// app_request
-		try {
-			$requests = $facebook->api('/me/apprequests');
-			echo count($requests['data']).' pending request</br>';
-			foreach ($requests['data'] as $value) {
-				echo 'from '.$value['from']['name'].' : '.$value['id'].'<br/>';
-				//print_a($value);
-			}
-		}catch (FacebookApiException $e) {
-			echo $e->getMessage();
-		}
-		
-		echo '</br>';
-		//deleteRequests($facebook);
-		
-		// get scores
-		$score = 0;
-		
-		try {
-			$scores = $facebook->api('/me/scores');
-			$score = $scores['data'][0]['score'];
-			//print_a($scores);
-			echo 'Your score is '.$score;
-		}catch (FacebookApiException $e) {
-			echo $e->getMessage();
-		}
-		
-		echo '</br>';
-		echo '</br>';
-		
-		// set scores
-		try {
-			$scores = $facebook->api('me/scores', 'POST', array(
-				'score' => ($score+1)
-			));
-		}
-		catch(FacebookApiException $e){
-			echo $e->getMessage();
-		}
-		
+        
+        // app_request
+        try {
+            $requests = $facebook->api('/me/apprequests');
+            echo count($requests['data']).' pending request</br>';
+            foreach ($requests['data'] as $value) {
+                echo 'from '.$value['from']['name'].' : '.$value['id'].'<br/>';
+                //print_a($value);
+            }
+        }catch (FacebookApiException $e) {
+            echo $e->getMessage();
+        }
+        
+        echo '</br>';
+        //deleteRequests($facebook);
+        
+        // get scores
+        $score = 0;
+        
+        try {
+            $scores = $facebook->api('/me/scores');
+            $score = $scores['data'][0]['score'];
+            //print_a($scores);
+            echo 'Your score is '.$score;
+        }catch (FacebookApiException $e) {
+            echo $e->getMessage();
+        }
+        
+        echo '</br>';
+        echo '</br>';
+        
+        // set scores
+        try {
+            $scores = $facebook->api('me/scores', 'POST', array(
+                'score' => ($score+1)
+            ));
+        }
+        catch(FacebookApiException $e){
+            echo $e->getMessage();
+        }
+        
         if(!$session->hasPermission(FacebookPerms::publish_stream)){
             echo 'You must <a href="'.$session->getLoginURL().'" target="_parent">allow publish</a> to play';
         }else{
@@ -120,14 +121,14 @@ if($request->isPageLiked()){
 }
 
 function deleteRequests($facebook){
-	try {
-		$requests = $facebook->api('/me/apprequests');
-		foreach ($requests['data'] as $value) {
-			$delete = $facebook->api($value['id'], 'DELETE');
-		}
-	}catch (FacebookApiException $e) {
-		echo $e->getMessage();
-	}
+    try {
+        $requests = $facebook->api('/me/apprequests');
+        foreach ($requests['data'] as $value) {
+            $delete = $facebook->api($value['id'], 'DELETE');
+        }
+    }catch (FacebookApiException $e) {
+        echo $e->getMessage();
+    }
 }
 
 ?>
