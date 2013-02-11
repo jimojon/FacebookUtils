@@ -21,6 +21,7 @@ require 'src/FacebookUtils.php';
 require 'src/facebook.php'; // PHP SDK
 require 'tab.conf.php';
 
+
 // Debug
 Debug::$ACTIVE = FALSE;
 
@@ -49,6 +50,20 @@ $session->setScope(array(
 $session->clear();  // Clear session
 $session->load();
 
+function getPageName($id){
+    
+    // Known pages
+    $pages['231724386927312'] = 'Positronic';
+    $pages['445987285443286'] = 'Havas360.dev';
+    
+    if(isset($pages[$id])){
+        return $pages[$id];
+    }
+    
+    return 'unknown page';
+}
+
+
 
 ?>
 
@@ -60,7 +75,7 @@ $session->load();
         <title>Tab demo</title>
     </head>
     <body>
-        <h1>Tab demo</h1>
+        <h1>Tab demo on <?php echo getPageName($request->getPageID()); ?></h1>
         <p><a href="https://github.com/jonasmonnier/FacebookUtils" target="_blank">Source</a></p>
 <?php
 if($request->isPageLiked()){
@@ -71,53 +86,53 @@ if($request->isPageLiked()){
         // app_request
         try {
             $requests = $facebook->api('/me/apprequests');
-            echo count($requests['data']).' pending request</br>';
-            foreach ($requests['data'] as $value) {
-                echo 'from '.$value['from']['name'].' : '.$value['id'].'<br/>';
-                //print_a($value);
-            }
+            
+            if(count($requests['data']) > 0){
+                echo 'You have '.count($requests['data']).' pending request(s)</br>';
+                foreach ($requests['data'] as $value) {
+                    echo '  from '.$value['from']['name'].' : '.$value['id'].'<br/>';
+                    //print_a($value);
+                }
+           }
         }catch (FacebookApiException $e) {
             echo $e->getMessage();
         }
         
-        echo '</br>';
         //deleteRequests($facebook);
         
-        // get scores
         $score = 0;
         
-        try {
-            $scores = $facebook->api('/me/scores');
-            $score = $scores['data'][0]['score'];
-            //print_a($scores);
-            echo 'Your score is '.$score;
-        }catch (FacebookApiException $e) {
-            echo $e->getMessage();
-        }
-        
-        echo '</br>';
-        echo '</br>';
-        
-        // set scores
-        try {
-            $scores = $facebook->api('me/scores', 'POST', array(
-                'score' => ($score+1)
-            ));
-        }
-        catch(FacebookApiException $e){
-            echo $e->getMessage();
-        }
-        
         if(!$session->hasPermission(FacebookPerms::publish_stream)){
-            echo 'You must <a href="'.$session->getLoginURL().'" target="_parent">allow publish</a> to play';
+            echo 'You must <a href="'.$session->getLoginURL().'" target="_parent">allow publish</a> to play</br>';
         }else{
-            echo 'You are ready to play !';
+            
+            // get score
+            try {
+                
+                $scores = $facebook->api('/me/scores');
+                $score = $scores['data'][0]['score'];
+                //print_a($scores);
+                echo 'Your score is '.$score.'</br>';
+                
+                // set new scores
+                try {
+                    $scores = $facebook->api('me/scores', 'POST', array(
+                        'score' => ($score+1)
+                    ));
+                }
+                catch(FacebookApiException $e){
+                    echo 'Unable to save new score !<br/>'.$e->getMessage().'<br/><br/>';
+                }
+               
+            }catch (FacebookApiException $e) {
+                echo 'Unable to load score !<br/>'.$e->getMessage().'<br/><br/>';
+            }
         }
     }else{
-        echo '<a href="'.$session->getLoginURL().'" target="_parent">Play</a>';
+        echo '<a href="'.$session->getLoginURL().'" target="_parent">Play</a></br>';
     }
 }else{
-    echo 'Like to play';
+    echo 'Like to play</br>';
 }
 
 function deleteRequests($facebook){
