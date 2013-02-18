@@ -54,7 +54,6 @@ function getPageName($id){
     
     // Known pages
     $pages['231724386927312'] = 'Positronic';
-    $pages['445987285443286'] = 'Havas360.dev';
     
     if(isset($pages[$id])){
         return $pages[$id];
@@ -120,10 +119,13 @@ if($request->isPageLiked()){
                         'score' => ($score+1)
                     ));
                 }
+
+                // set new score error
                 catch(FacebookApiException $e){
                     echo 'Unable to save new score !<br/>'.$e->getMessage().'<br/><br/>';
                 }
-               
+            
+            // get score error
             }catch (FacebookApiException $e) {
                 echo 'Unable to load score !<br/>'.$e->getMessage().'<br/><br/>';
             }
