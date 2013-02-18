@@ -51,17 +51,13 @@ $session->clear();  // Clear session
 $session->load();
 
 function getPageName($id){
-    
-    // Known pages
-    $pages['231724386927312'] = 'Positronic';
-    
-    if(isset($pages[$id])){
-        return $pages[$id];
+    if(isset($APP_PAGES[$id])){
+        return $APP_PAGES[$id];
     }
     
     return 'unknown page';
 }
-
+ 
 
 
 ?>
