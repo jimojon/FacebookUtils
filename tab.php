@@ -30,8 +30,8 @@ TransSID::init();
 
 // Init Facebook PHP SDK
 $facebook = new Facebook(array(
-  'appId'  => APP_ID,
-  'secret' => APP_SECRET 
+  'appId'  => TabConfig::APP_ID,
+  'secret' => TabConfig::APP_SECRET 
 ));
 
 // Init SignedRequest
@@ -41,7 +41,7 @@ $request->load();
 
 // Init FacebookSession
 $session = new FacebookSession($facebook); 
-$session->setAppURI(APP_TAB_URL);
+$session->setAppURI(TabConfig::getPageURL($request->getPageID()));
 $session->setScope(array(
     FacebookPerms::publish_stream,
     FacebookPerms::email
@@ -49,16 +49,6 @@ $session->setScope(array(
 
 $session->clear();  // Clear session
 $session->load();
-
-function getPageName($id){
-    if(isset($APP_PAGES[$id])){
-        return $APP_PAGES[$id];
-    }
-    
-    return 'unknown page';
-}
- 
-
 
 ?>
 
@@ -70,7 +60,7 @@ function getPageName($id){
         <title>Tab demo</title>
     </head>
     <body>
-        <h1>Tab demo on <?php echo getPageName($request->getPageID()); ?></h1>
+        <h1>Tab demo on <?php echo TabConfig::getPageName($request->getPageID()); ?></h1>
         <p><a href="https://github.com/jonasmonnier/FacebookUtils" target="_blank">Source</a></p>
 <?php
 if($request->isPageLiked()){
