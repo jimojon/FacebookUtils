@@ -14,12 +14,11 @@
 error_reporting(E_ALL);
 ini_set("display_errors", 1); 
 
-require 'src/CommonUtils.php';
-require 'src/TransSID.php';
-require 'src/FacebookUtils.php';
-
-require 'src/facebook.php'; // PHP SDK
-require 'index.conf.php';
+require '../src/Utils.php';
+require '../src/TransSID.php';
+require '../src/FacebookUtils.php';
+require '../src/facebook.php'; // PHP SDK
+require '../conf/index.conf.php';
 
 
 // Debug
