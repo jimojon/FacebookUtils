@@ -6,8 +6,6 @@
 * https://github.com/jonasmonnier/FacebookUtils
 *
 * @author Jonas
-* @version 0.2.0
-* @date 2013-02-11
 * 
 */
 
@@ -17,7 +15,7 @@ header('P3P: CP="IDC DSP COR CURa ADMa OUR IND PHY ONL COM STA"');
 
 class FacebookSignedRequest
 {
-    const VERSION = '0.1.9';
+    const VERSION = '0.2.0';
 
     private $data;
     private $facebook;
@@ -39,8 +37,6 @@ class FacebookSignedRequest
         if($this->hasData()){
             Debug::TRACE('SignedRequest :: save');
             FacebookSessionUtil::save('signed_request', $this->data);
-        }else{
-            Debug::TRACE('SignedRequest :: nothing to save');
         }
     }
     public function clear(){
@@ -154,7 +150,7 @@ class FacebookSignedRequest
 
 class FacebookSession
 {
-    const VERSION = '0.1.9';
+    const VERSION = '0.2.0';
 
     private $facebook;
     private $session;
@@ -493,7 +489,6 @@ class FacebookSessionUtil
         unset($_SESSION[self::getSessionName()][$name]);
     }
 }
-
 
 
 
