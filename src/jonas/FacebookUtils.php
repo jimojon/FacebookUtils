@@ -71,6 +71,10 @@ class FacebookSignedRequest
     public function getData(){
         return $this->data;
     }
+
+    public function setData($data){
+        $this->data = $data;
+    }
     
     public function hasData(){
         return $this->data != null;
@@ -85,27 +89,39 @@ class FacebookSignedRequest
     */
     
     public function getPageID(){
-        return $this->data['page']['id'];
+        if(isset($this->data['page']['id']))
+            return $this->data['page']['id'];
+        return null;
     }
     
     public function isPageLiked(){
-        return $this->data['page']['liked'] == 1;
+        if(isset($this->data['page']['liked']))
+            return $this->data['page']['liked'] == 1;
+        return null;
     }
     
     public function isUserAdmin(){
-        return $this->data['page']['admin'] == 1;
+        if(isset($this->data['page']['admin']))
+            return $this->data['page']['admin'] == 1;
+        return null;
     }
     
     public function getUserCountry(){
-        return $this->data['user']['country'];
+        if(isset($this->data['user']['country']))
+            return $this->data['user']['country'];
+        return null;
     }
     
     public function getUserLocale(){
-        return $this->data['user']['locale'];
+        if(isset($this->data['user']['locale']))
+            return $this->data['user']['locale'];
+        return null;
     }
     
     public function getUserID(){
-        return $this->data['user_id'];
+        if(isset($this->data['user_id']))
+            return $this->data['user_id'];
+        return null;
     }
     
     public function isUserAmin(){
@@ -219,7 +235,8 @@ class FacebookSession
                 catch (FacebookApiException $e) {
                     Debug::TRACE('FacebookSession :: '.$e->getMessage());
                     $this->clear();
-                    
+
+                    // Second call
                     if($firstCall)
                         $this->load(false);
                 }
@@ -292,19 +309,73 @@ class FacebookSession
     public function isAuth(){
         return $this->user_id != null;
     }
-    
+
+
+
+
+    /**
+     * getUserID
+     * @return mixed
+     */
     public function getUserID(){
         return $this->user_id;
     }
 
+    /**
+     * setUserID (Debug purpose)
+     * @param $id
+     */
+    public function setUserID($id){
+        $this->user_id = $id;
+    }
+
+
+
+
+    /**
+     * getUserData
+     * @param bool $clear
+     * @return Array
+     */
     public function getUserData($clear = false){
         if($this->isAuth() && ($this->user_data == null || $clear)){
-            $this->user_data = $this->facebook->api('/me/');
-            FacebookSessionUtil::save('user_data', $this->user_data);
+            try {
+                $this->user_data = $this->facebook->api('/me/');
+                FacebookSessionUtil::save('user_data', $this->user_data);
+            }catch(FacebookApiException $e){}
         }
         return $this->user_data;
     }
-    
+
+    /**
+     * setUserData
+     * @param Array $data
+     *
+     * Array
+     * (
+     *      [id] => 123456789
+     *      [name] => John Doe
+     *      [first_name] => Doe
+     *      [last_name] => Doe
+     *      [link] => https://www.facebook.com/johndoe
+     *      [username] => johndoe
+     *      [gender] => male
+     *      [email] => john.doe@gmail.com
+     *      [timezone] => 1
+     *      [locale] => fr_FR
+     *      [verified] => 1
+     *      [updated_time] => 2099-01-01T00:00:00+0000
+     * )
+     */
+    public function setUserData($data){
+        $this->user_data = $data;
+        FacebookSessionUtil::save('user_data', $this->user_data);
+    }
+
+    /**
+     * @param bool $clear
+     * @return Array
+     */
     public function getUserPermissions($clear = false){
         if($this->isAuth() && ($this->user_permissions == null || $clear)){
             $this->user_permissions = $this->facebook->api('/me/permissions');
@@ -312,14 +383,33 @@ class FacebookSession
         }
         return $this->user_permissions; 
     }
-    
-    public function hasPermission($name){
-        if(!isset($this->user_permissions)){ 
+
+    /**
+     * setUserPermissions
+     * @param Array $perms
+     */
+    public function setUserPermissions($perms)
+    {
+        $this->user_permissions['data'][0] = $perms;
+    }
+
+    /**
+     * hasPermission
+     * @param string $name
+     * @return bool|null
+     */
+    public function hasPermission($name = ''){
+        if($name == '')
+            return true;
+
+        if(!isset($this->user_permissions)){
             return null;
         }else{
             return isset($this->user_permissions['data'][0][$name]) && $this->user_permissions['data'][0][$name] == '1';
         }
     }
+
+
 }
 
 /**
@@ -489,6 +579,7 @@ class FacebookSessionUtil
         unset($_SESSION[self::getSessionName()][$name]);
     }
 }
+
 
 
 
