@@ -20,9 +20,11 @@ class Debug {
     public static $ACTIVE = false;
     public static $PATERN = 'DEBUG :: ';
 
+    public static $message = '';
+
     public static function TRACE($s){
         if(self::$ACTIVE)
-            echo '<pre>'.self::$PATERN.$s.'</pre>';
+            self::$message .= '<pre>'.self::$PATERN.$s.'</pre>';
     }
 }
 

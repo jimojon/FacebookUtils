@@ -16,10 +16,14 @@ ini_set("display_errors", 1);
 
 require '../src/jonas/Utils.php';
 require '../src/jonas/TransSID.php';
-require '../src/jonas/FacebookUtils.php';
+//require '../src/jonas/FacebookUtils.php';
 require '../src/facebook/facebook.php'; // PHP SDK
 require '../conf/index.conf.php';
 
+require '../src/jonas/facebook/FBCore.php';
+require '../src/jonas/facebook/FBLogin.php';
+require '../src/jonas/facebook/FBSignedRequest.php';
+require '../src/jonas/facebook/FBPerms.php';
 
 // Debug
 Debug::$ACTIVE = true;
@@ -46,7 +50,7 @@ if(isset($_REQUEST['page'])){
 }
 
 // Init SignedRequest
-$request = new FacebookSignedRequest($facebook, $use_session);
+$request = new FBSignedRequest($facebook, $use_session);
 /*
 if(!$use_session)
     $request->clear(); // Clear session
@@ -55,25 +59,25 @@ $request->load();
 
 switch($request->getAppType())
 {
-    case FacebookAppType::CANEVAS :
+    case FBAppType::CANEVAS :
     $appURL = APP_CANVAS_URL;
     break;
     
-    case FacebookAppType::PAGE_TAB :
+    case FBAppType::PAGE_TAB :
     $appURL = APP_PAGE_TAB_URL;
     break;
     
-    case FacebookAppType::WEBSITE :
+    case FBAppType::WEBSITE :
     $appURL = APP_WEBSITE_URL;
     break;
 }
 
 // Init FacebookSession
-$session = new FacebookSession($facebook, $use_session); 
+$session = new FBLogin($facebook, $use_session);
 $session->setAppURI($appURL);
 $session->setScope(array(
-    FacebookPerms::publish_stream,
-    FacebookPerms::email
+    FBPerms::publish_stream,
+    FBPerms::email
 ));
 
 /*
@@ -114,9 +118,53 @@ $session->load();
       h2 a:hover {
         text-decoration: underline;
       }
+
+      #debug-control {
+          top:0px;
+          right:0px;
+          position:fixed;
+          float:right;
+          width:120px;
+          height:20px;
+          background-color: #cccccc;
+          text-align: left;
+      }
+
+      #debug-control span {
+          margin-left: 5px;
+      }
+
+
+      #debug-panel {
+          top: 0px;
+          right: 120px;
+          position: fixed;
+          background-color: #cccccc;
+          display: none;
+          width:400px;
+          height:400px;
+      }
+
+      #debug-panel div {
+          margin: 15px 15px 15px 15px;
+      }
+
     </style>
+
+      <script>
+          function toggleDebug()
+          {
+              var currentState = document.getElementById("debug-panel").style.display;
+              document.getElementById("debug-panel").style.display = (currentState == 'none' ? 'block' : 'none');
+          }
+      </script>
   </head>
   <body>
+    <div id="debug-control" onclick="toggleDebug()"><span>Debug</span></div>
+    <div id="debug-panel">
+        <div><?php echo Debug::$message; ?></div>
+    </div>
+
     <h1>FacebookUtils 
 <?php 
     if($page !=0) 
@@ -155,7 +203,7 @@ $session->load();
         
         // Check permissions
         echo '<h2>Has publish Stream Permission ?</h2><pre>';
-        if($session->hasPermission(FacebookPerms::publish_stream))
+        if($session->hasPermission(FBPerms::publish_stream))
             echo 'Yes<br/><a href="https://www.facebook.com/settings/?tab=applications" target="_blank">Change</a><br/>';
         else
             echo 'No<br/><a href="'.$session->getLoginURL().'" target="_parent">Change</a><br/>';
@@ -163,7 +211,7 @@ $session->load();
         
         // Check permissions
         echo '<h2>Has email Permission ?</h2><pre>';
-        if($session->hasPermission(FacebookPerms::email))
+        if($session->hasPermission(FBPerms::email))
             echo 'Yes<br/><a href="https://www.facebook.com/settings/?tab=applications" target="_blank">Change</a><br/>';
         else
             echo 'No<br/><a href="'.$session->getLoginURL().'" target="_parent">Change</a><br/>';
