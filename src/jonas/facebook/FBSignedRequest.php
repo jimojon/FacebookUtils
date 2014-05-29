@@ -7,7 +7,10 @@ use jonas\facebook;
 
 class FBSignedRequest
 {
-    const VERSION = '0.2.0';
+    const SESSION = 'session';
+    const SDK = 'SDK';
+
+    const VERSION = '1.0.1';
 
     private $data;
     private $facebook;
@@ -15,7 +18,9 @@ class FBSignedRequest
     private $source;
 
     public function __construct($facebook, $session = true){
-        Debug::TRACE('SignedRequest '.self::VERSION.' - '.$facebook->getAppID());
+        Debug::TRACE('FBSignedRequest '.self::VERSION);
+        Debug::TRACE('FBSignedRequest '.'APP ID = '.$facebook->getAppID());
+        //Debug::TRACE(print_r($_REQUEST, true));
         $this->facebook = $facebook;
         $this->session = $session;
         FBSessionUtil::init($facebook);
@@ -27,16 +32,16 @@ class FBSignedRequest
 
     public function save(){
         if($this->hasData()){
-            Debug::TRACE('SignedRequest :: save');
+            //Debug::TRACE('FBSignedRequest :: save');
             FBSessionUtil::save('signed_request', $this->data);
         }
     }
     public function clear(){
-        Debug::TRACE('SignedRequest :: clear');
+        //Debug::TRACE('FBSignedRequest :: clear');
         FBSessionUtil::clear('signed_request');
     }
     public function load(){
-        Debug::TRACE('SignedRequest :: load');
+        Debug::TRACE('FBSignedRequest :: load');
 
         // get data from facebook
         $this->data = $this->facebook->getSignedRequest();
@@ -54,9 +59,9 @@ class FBSignedRequest
         }
 
         if($this->hasData()){
-            Debug::TRACE('SignedRequest :: load success from '.$this->source);
+            Debug::TRACE('FBSignedRequest :: load success from '.$this->source);
         }else{
-            Debug::TRACE('SignedRequest :: load error');
+            Debug::TRACE('FBSignedRequest :: load error');
         }
     }
 
@@ -74,6 +79,10 @@ class FBSignedRequest
 
     public function getSource(){
         return $this->source;
+    }
+
+    public function setSource($source){
+        $this->source = $source;
     }
 
     /**

@@ -151,15 +151,12 @@ $session->load();
 
     </style>
 
-      <script>
-          function toggleDebug()
-          {
-              var currentState = document.getElementById("debug-panel").style.display;
-              document.getElementById("debug-panel").style.display = (currentState == 'none' ? 'block' : 'none');
-          }
-      </script>
+
   </head>
   <body>
+  <script>
+      function toggleDebug(){document.getElementById("debug-panel").style.display = (document.getElementById("debug-panel").style.display == 'none' ? 'block' : 'none');}
+  </script>
     <div id="debug-control" onclick="toggleDebug()"><span>Debug</span></div>
     <div id="debug-panel">
         <div><?php echo Debug::$message; ?></div>

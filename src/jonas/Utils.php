@@ -6,6 +6,13 @@ function print_a($a){
     echo '<pre>'.print_r($a, true).'</pre>';
 }
 
+class Time {
+    static function createFromSQL($sqlDateTime){
+        $format = 'Y-m-d H:i:s';
+        return \DateTime::createFromFormat($format, $sqlDateTime);
+    }
+}
+
 class Utils {
 
     static function printArray($a){
@@ -23,6 +30,10 @@ class Debug {
     public static $PATERN = 'DEBUG :: ';
 
     public static $message = '';
+
+    public static function getMessage(){
+        return self::$message;
+    }
 
     public static function TRACE($s){
         if(self::$ACTIVE)

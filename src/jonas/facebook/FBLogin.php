@@ -88,7 +88,7 @@ class FBLogin
         if($this->source == '')
             Debug::TRACE('FBSession :: User not auth');
         else
-            Debug::TRACE('FBSession :: User auth from '.$this->source.', '.$this->user_id);
+            Debug::TRACE('FBSession :: User '.$this->user_data['name'].' auth from '.$this->source.', '.$this->user_id);
     }
     
     public function save()
@@ -120,14 +120,21 @@ class FBLogin
     /**
     * Data
     */
-    
+
+
+    /**
+     * @param Array $scope
+     */
     public function setScope($scope){
         $this->scope = $scope;
     }
     public function getScope(){
         return $this->scope;
     }
-    
+
+    /**
+     * @param String $app_uri
+     */
     public function setAppURI($app_uri){
         $this->app_uri = $app_uri;
     }
