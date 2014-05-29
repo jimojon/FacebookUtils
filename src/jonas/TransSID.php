@@ -40,15 +40,15 @@ class TransSID
 
         session_start();
         
-        Debug::TRACE('TransSID :: isSafari = '.Utils::formatBoolean(self::isSafari()));
-        Debug::TRACE('TransSID :: isActive = '.Utils::formatBoolean(self::isActive()));
+        Debug::TRACE('TransSID :: isSafari = '.var_export(self::isSafari(), true));
+        Debug::TRACE('TransSID :: isActive = '.var_export(self::isActive(), true));
         
         if(!Debug::$ACTIVE){
             Debug::TRACE('TransSID :: session.use_trans_sid = '.ini_get('session.use_trans_sid'));
             Debug::TRACE('TransSID :: session.use_only_cookies = '.ini_get('session.use_only_cookies'));
         }
 
-        Debug::TRACE('TransSID :: isUsed = '.Utils::formatBoolean(self::isUsed()));
+        Debug::TRACE('TransSID :: isUsed = '.var_export(self::isUsed(), true));
     }
     
     public static function getSID(){
