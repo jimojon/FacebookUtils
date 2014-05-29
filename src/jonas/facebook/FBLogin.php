@@ -1,5 +1,8 @@
 <?php
 
+namespace jonas\facebook;
+
+use jonas\Debug;
 
 class FBLogin
 {

@@ -5,6 +5,10 @@
  * @date 2012-20-09
  */
 
+namespace jonas\facebook;
+
+use jonas\Debug;
+
 class FBPerms {
 
     //User and Friends Permissions

@@ -1,5 +1,10 @@
 <?php
 
+namespace jonas\facebook;
+
+use jonas\Debug;
+use jonas\facebook;
+
 class FBSignedRequest
 {
     const VERSION = '0.2.0';
