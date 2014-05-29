@@ -14,6 +14,10 @@
 //http://php.net/manual/fr/session.security.php
 //http://php.net/manual/fr/function.ob-start.php
 //http://php.net/manual/fr/ref.session.php#53809
+
+
+use jonas\Debug;
+
 class TransSID 
 {
     public static $DEBUG = false;

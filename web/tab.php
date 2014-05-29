@@ -14,16 +14,22 @@
 error_reporting(E_ALL);
 ini_set("display_errors", 1);
 
-require '../src/jonas/Utils.php';
-require '../src/jonas/TransSID.php';
-//require '../src/jonas/FacebookUtils.php';
 require '../src/facebook/facebook.php'; // PHP SDK
+
 require '../conf/tab.conf.php';
 
-require '../src/jonas/facebook/FBCore.php';
+require '../src/jonas/Utils.php';
+require '../src/jonas/TransSID.php';
+
 require '../src/jonas/facebook/FBLogin.php';
 require '../src/jonas/facebook/FBSignedRequest.php';
 require '../src/jonas/facebook/FBPerms.php';
+require '../src/jonas/facebook/FBSessionUtil.php';
+
+use jonas\Debug;
+use jonas\facebook\FBSignedRequest;
+use jonas\facebook\FBLogin;
+use jonas\facebook\FBPerms;
 
 
 // Debug

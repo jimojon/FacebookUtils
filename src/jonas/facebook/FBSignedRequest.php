@@ -3,7 +3,6 @@
 namespace jonas\facebook;
 
 use jonas\Debug;
-use jonas\facebook;
 
 class FBSignedRequest
 {
