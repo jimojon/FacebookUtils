@@ -14,12 +14,22 @@
 error_reporting(E_ALL);
 ini_set("display_errors", 1);
 
-require 'src/CommonUtils.php';
-require 'src/TransSID.php';
-require 'src/FacebookUtils.php';
+require '../src/facebook/facebook.php'; // PHP SDK
 
-require 'src/facebook.php'; // PHP SDK
-require 'tab.conf.php';
+require '../conf/tab.conf.php';
+
+require '../src/jonas/Utils.php';
+require '../src/jonas/TransSID.php';
+
+require '../src/jonas/facebook/FBLogin.php';
+require '../src/jonas/facebook/FBSignedRequest.php';
+require '../src/jonas/facebook/FBPerms.php';
+require '../src/jonas/facebook/FBSessionUtil.php';
+
+use jonas\Debug;
+use jonas\facebook\FBSignedRequest;
+use jonas\facebook\FBLogin;
+use jonas\facebook\FBPerms;
 
 
 // Debug
@@ -35,16 +45,16 @@ $facebook = new Facebook(array(
 ));
 
 // Init SignedRequest
-$request = new FacebookSignedRequest($facebook);
+$request = new FBSignedRequest($facebook);
 $request->clear(); // Clear session
 $request->load();
 
 // Init FacebookSession
-$session = new FacebookSession($facebook); 
+$session = new FBLogin($facebook);
 $session->setAppURI(TabConfig::getPageURL($request->getPageID()));
 $session->setScope(array(
-    FacebookPerms::publish_stream,
-    FacebookPerms::email
+    FBPerms::publish_stream,
+    FBPerms::email
 ));
 
 $session->clear();  // Clear session
@@ -87,7 +97,7 @@ if($request->isPageLiked()){
         
         $score = 0;
         
-        if(!$session->hasPermission(FacebookPerms::publish_stream)){
+        if(!$session->hasPermission(FBPerms::publish_stream)){
             echo 'You must <a href="'.$session->getLoginURL().'" target="_parent">allow publish</a> to play</br>';
         }else{
             

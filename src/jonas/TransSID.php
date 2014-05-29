@@ -14,6 +14,10 @@
 //http://php.net/manual/fr/session.security.php
 //http://php.net/manual/fr/function.ob-start.php
 //http://php.net/manual/fr/ref.session.php#53809
+
+
+use jonas\Debug;
+
 class TransSID 
 {
     public static $DEBUG = false;
@@ -40,15 +44,15 @@ class TransSID
 
         session_start();
         
-        self::TRACE('TransSID :: isSafari = '.Utils::formatBoolean(self::isSafari()));
-        self::TRACE('TransSID :: isActive = '.Utils::formatBoolean(self::isActive()));
+        Debug::TRACE('TransSID :: isSafari = '.var_export(self::isSafari(), true));
+        Debug::TRACE('TransSID :: isActive = '.var_export(self::isActive(), true));
         
-        if(!self::isActive()){
-            self::TRACE('TransSID :: session.use_trans_sid = '.ini_get('session.use_trans_sid'));
-            self::TRACE('TransSID :: session.use_only_cookies = '.ini_get('session.use_only_cookies'));
+        if(!Debug::$ACTIVE){
+            Debug::TRACE('TransSID :: session.use_trans_sid = '.ini_get('session.use_trans_sid'));
+            Debug::TRACE('TransSID :: session.use_only_cookies = '.ini_get('session.use_only_cookies'));
         }
-        
-        self::TRACE('TransSID :: isUsed = '.Utils::formatBoolean(self::isUsed()));
+
+        Debug::TRACE('TransSID :: isUsed = '.var_export(self::isUsed(), true));
     }
     
     public static function getSID(){
@@ -61,7 +65,7 @@ class TransSID
         }else{
             $url = $url.'?'.self::$TRANS_SID_NAME.'='.self::getSID();
         }
-        self::TRACE('TransSID :: getURL = '.$url);
+        Debug::TRACE('TransSID :: getURL = '.$url);
         return $url;
     }
 
@@ -88,10 +92,5 @@ class TransSID
     public static function isSafari(){
         $u = $_SERVER['HTTP_USER_AGENT'];
         return preg_match('/Safari/', $u) && !preg_match('/Chrome/', $u);
-    }
-    
-    public static function TRACE($s){
-        if(self::$DEBUG)
-            echo '<pre>DEBUG :: '.$s.'</pre>';
     }
 }

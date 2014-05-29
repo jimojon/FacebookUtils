@@ -1,7 +1,16 @@
 <?php
 
+namespace jonas;
+
 function print_a($a){
     echo '<pre>'.print_r($a, true).'</pre>';
+}
+
+class Time {
+    static function createFromSQL($sqlDateTime){
+        $format = 'Y-m-d H:i:s';
+        return \DateTime::createFromFormat($format, $sqlDateTime);
+    }
 }
 
 class Utils {
@@ -20,9 +29,15 @@ class Debug {
     public static $ACTIVE = false;
     public static $PATERN = 'DEBUG :: ';
 
+    public static $message = '';
+
+    public static function getMessage(){
+        return self::$message;
+    }
+
     public static function TRACE($s){
         if(self::$ACTIVE)
-            echo '<pre>'.self::$PATERN.$s.'</pre>';
+            self::$message .= '<pre>'.self::$PATERN.$s.'</pre>';
     }
 }
 
