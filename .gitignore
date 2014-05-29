@@ -5,7 +5,7 @@
 doc/
 dev/
 src/facebook/
-
+vendor/
 
 #################
 ## IDE
