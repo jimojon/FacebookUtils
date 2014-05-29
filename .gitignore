@@ -1,14 +1,10 @@
-#################
-## PROJECT
-#################
-
+# PROJECT
 doc/
 dev/
 src/facebook/
+vendor/
 
 
-#################
-## IDE
-#################
 
+# IDE
 .idea
